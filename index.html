@@ -7,6 +7,7 @@
   <!-- API Key for code.google.com -->
   <script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=ABQIAAAAwbkbZLyhsmTCWXbTcjbgbRSzHs7K5SvaUdm8ua-Xxy_-2dYwMxQMhnagaawTo7L1FE1-amhuQxIlXw"></script>
   <style type="text/css">@import "index.css";</style>
+  <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="geplugin-helpers.js"></script>
   <script type="text/javascript" src="math3d.js"></script>
   <script type="text/javascript" src="simulator.js"></script>
@@ -67,36 +68,27 @@ google.setOnLoadCallback(DS_init);
 </head>
 <body onunload="GUnload();">
 <h1>Google Earth Plug-in Driving Simulator</h1>
-<table style="width: 100%; height: 400px;">
+<table style="width: 100%; height: 1000px;">
 <tr>
   <td style="width: 300px" valign="top">
     <table style="width: 300px">
       <tr>
-        <td style="width: 50%" valign="top">
+        <td style="width: 100%" valign="top">
           <form id="directions-form" onsubmit="return false;" action="get">
-            <fieldset>
               <legend>Directions</legend>
               From:<br/>
-              <input type="text" id="from" value="San Francisco, CA"/><br/>
+              <input type="text" id="from" value="San Francisco, CA" onclick="simulateKeyPress(101);"/><br/>
               To:<br/>
               <input type="text" id="to" value="Mountain View, CA"/><br/>
               <input type="submit" onclick="DS_goDirections();" id="go" value="Go!"/>
 			  <input type="submit" onclick="DS_nextStep();" id="nextstep" value="Next"/>
 			  <input type="submit" onclick="DS_previousStep();" id="previousstep" value="Previous"/>
-            </fieldset>
-          </form>
-        </td>
-        <td style="width: 50%" valign="top">
-          <form id="simulator-form" onsubmit="return false;" action="get">
-            <fieldset>
-              <legend>Simulator</legend>
-              <input type="button" onclick="DS_controlSimulator('reset');" value="Reset"/><br/>
-              <input type="button" onclick="DS_controlSimulator('start');" value="Start"/><br/>
-              <input type="button" onclick="DS_controlSimulator('pause');" value="Pause"/><br/>
-              Speed: <strong><span id="speed-indicator">1x</span></strong><br/>
-              <input type="button" onclick="DS_controlSimulator('slower');" value="-"/>
-              <input type="button" onclick="DS_controlSimulator('faster');" value="+"/>
-            </fieldset>
+			  <input type="submit" onclick="DS_zoomIn();" id="zoomin" value="Zoom In"/>
+			  <input type="submit" onclick="DS_zoomOut();" id="zoomout" value="Zoom Out"/>
+			  <input type="submit" onclick="DS_moveRight();" id="keyboardright" value="Right"/>
+			  <input type="submit" onclick="DS_moveLeft();" id="keyboardleft" value="Left"/>
+			  <input type="submit" onclick="DS_moveUp();" id="keyboardup" value="Up"/>
+			  <input type="submit" onclick="DS_moveDown();" id="keyboarddown" value="Down"/>
           </form>
         </td>
       </tr>
@@ -105,14 +97,12 @@ google.setOnLoadCallback(DS_init);
   </td>
   <td style="width: 100%" valign="top">
     <div id="earth" style="border: 1px solid #000; height: 500px;">
-    <div id="status"></div>
   </td>
   <td style="width: 0%" valign="top">
-    <div id="map" style="border: 1px solid #000; height: 500px;"></div>
+    <div id="map"></div>
   </td>
 </tr>
 </table>
-
 
 </body>
 </html>

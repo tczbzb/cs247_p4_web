@@ -485,3 +485,62 @@ function DS_previousStep() {
 	}
 	DS_flyToStep(DS_currentStep);
 }
+
+function DS_zoomIn() {
+	// Get the current view.
+	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+	// Zoom in to half the current range.
+	lookAt.setRange(lookAt.getRange() / 2.0);
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(lookAt);
+}
+
+function DS_zoomOut() {
+	// Get the current view.
+	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+	// Zoom out to twice the current range.
+	lookAt.setRange(lookAt.getRange() * 2.0);
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(lookAt);
+}
+
+function DS_moveRight() {
+	// Get the current view.
+	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+
+	lookAt.setLatitude(lookAt.getLatitude() - 0.001);
+	lookAt.setLongitude(lookAt.getLongitude() + 0);
+
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(lookAt);
+}
+
+function DS_moveLeft() {
+	// Get the current view.
+	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+
+	lookAt.setLatitude(lookAt.getLatitude() + 0.001);
+
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(lookAt);
+}
+
+function DS_moveDown() {
+	// Get the current view.
+	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+
+	lookAt.setLongitude(lookAt.getLongitude() - 0.001);
+
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(lookAt);
+}
+
+function DS_moveUp() {
+	// Get the current view.
+	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+
+	lookAt.setLongitude(lookAt.getLongitude() + 0.001);
+
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(lookAt);
+}
