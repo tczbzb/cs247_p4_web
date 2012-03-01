@@ -294,11 +294,11 @@ function DS_flyToStep(stepNum) {
   
   var la = DS_ge.createLookAt('');
   la.set(step.loc.lat(), step.loc.lng(),
-      5, // altitude
+      20, // altitude
       DS_ge.ALTITUDE_RELATIVE_TO_GROUND,
       DS_geHelpers.getHeading(step.loc, DS_path[step.pathIndex + 1].loc),
-      90, // tilt
-      10 // range (inverse of zoom)
+      70, // tilt
+      100 // range (inverse of zoom)
       );
   DS_ge.getView().setAbstractView(la);
 
