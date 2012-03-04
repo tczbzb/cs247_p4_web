@@ -520,6 +520,9 @@ function DS_zoomOut() {
 	if (lookAt.getTilt() > 0) {
 		lookAt.setTilt(0);
 		lookAt.setRange(100);
+		var step = DS_steps[DS_currentStep];
+		lookAt.setLatitude(step.loc.lat());
+		lookAt.setLongitude(step.loc.lng());
 	}
 	// Zoom out to twice the current range.
 	lookAt.setRange(lookAt.getRange() * 2.0);
