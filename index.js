@@ -530,43 +530,78 @@ function DS_zoomOut() {
 	DS_ge.getView().setAbstractView(lookAt);
 }
 
+// Driving Controls
+var DS_distanceStepInMeters = 50;
 function DS_moveRight() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
 
-	lookAt.setLatitude(lookAt.getLatitude() - 0.001);
-	lookAt.setLongitude(lookAt.getLongitude() + 0);
-
+	// Trig! Calculate angles, vector components, etc.
+  var distInDegrees = metersToDegrees(DS_distanceStepInMeters);
+  var theta = lookAt.getHeading();
+	var d_lat = -1 * distInDegrees * Math.cos(theta);
+	var d_lng = distInDegrees * Math.sin(theta);
+	
+	// Update latitude and longitude for the new position.
+	lookAt.setLatitude(lookAt.getLatitude() + d_lat);
+	lookAt.setLongitude(lookAt.getLongitude() + d_lng);
+	
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 }
-
 function DS_moveLeft() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
 
-	lookAt.setLatitude(lookAt.getLatitude() + 0.001);
-
+  // Trig! Calculate angles, vector components, etc.
+  var distInDegrees = metersToDegrees(DS_distanceStepInMeters);
+  var theta = lookAt.getHeading();
+	var d_lat = distInDegrees * Math.cos(theta);
+	var d_lng = -1 * distInDegrees * Math.sin(theta);
+	
+	// Update latitude and longitude for the new position.
+	lookAt.setLatitude(lookAt.getLatitude() + d_lat);
+	lookAt.setLongitude(lookAt.getLongitude() + d_lng);
+  
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 }
-
 function DS_moveDown() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
 
-	lookAt.setLongitude(lookAt.getLongitude() - 0.001);
+	// Trig! Calculate angles, vector components, etc.
+  var distInDegrees = metersToDegrees(DS_distanceStepInMeters);
+  var theta = lookAt.getHeading();
+	var d_lat = -1 * distInDegrees * Math.cos(theta);
+	var d_lng = -1 * distInDegrees * Math.sin(theta);
+	
+	// Update latitude and longitude for the new position.
+	lookAt.setLatitude(lookAt.getLatitude() + d_lat);
+	lookAt.setLongitude(lookAt.getLongitude() + d_lng);
+	
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(lookAt);
+}
+function DS_moveUp() {
+	// Get the current view.
+	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+  
+  // Trig! Calculate angles, vector components, etc.
+  var distInDegrees = metersToDegrees(DS_distanceStepInMeters);
+  var theta = lookAt.getHeading();
+	var d_lat = distInDegrees * Math.cos(theta);
+	var d_lng = distInDegrees * Math.sin(theta);
+	
+	// Update latitude and longitude for the new position.
+	lookAt.setLatitude(lookAt.getLatitude() + d_lat);
+	lookAt.setLongitude(lookAt.getLongitude() + d_lng);
 
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 }
-
-function DS_moveUp() {
-	// Get the current view.
-	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-
-	lookAt.setLongitude(lookAt.getLongitude() + 0.001);
-
-	// Update the view in Google Earth.
-	DS_ge.getView().setAbstractView(lookAt);
+function metersToDegrees(nMeters) {
+  return nMeters
+          * (1/1852) // nautical miles in a meter (i.e. 1852 m = 1 nautical mile)
+          * (1/60);  // degrees in a nautical mile (i.e. 60 nautical miles = 1 degree)
 }

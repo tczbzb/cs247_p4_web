@@ -5,7 +5,8 @@
   <title>The Geocoders</title>
   <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
   <!-- API Key for code.google.com -->
-  <script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=ABQIAAAAwbkbZLyhsmTCWXbTcjbgbRSzHs7K5SvaUdm8ua-Xxy_-2dYwMxQMhnagaawTo7L1FE1-amhuQxIlXw"></script>
+  <!--<script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=ABQIAAAAwbkbZLyhsmTCWXbTcjbgbRSzHs7K5SvaUdm8ua-Xxy_-2dYwMxQMhnagaawTo7L1FE1-amhuQxIlXw"></script>-->
+  <script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=AIzaSyCfDRLK9tu-KA7Tt13BeIMEb22QHDGaa6c"></script>
   <style type="text/css">@import "index.css";</style>
   <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="geplugin-helpers.js"></script>
@@ -57,9 +58,101 @@ function DS_init() {
   
   $(window).resize(onresize);
   onresize();
+  
+  // Activate arrow-key powered driving.
+  DS_activateKeyListeners();
 }
 
 google.setOnLoadCallback(DS_init);
+
+var KeyCodes = {
+  BACKSPACE:     8,
+  TAB:           9,
+  ENTER:        13,
+  SHIFT:        16,
+  CTRL:         17,
+  ALT:          18,
+  PAUSE_BREAK:  19,
+  CAPS_LOCK:    20,
+  ESCAPE:       27,
+  SPACE:        32, 
+  PAGE_UP:      33,
+  PAGE_DOWN:    34,
+  END:          35,
+  HOME:         36,
+  LEFT_ARROW:   37,
+  UP_ARROW:     38,
+  RIGHT_ARROW:  39,
+  DOWN_ARROW:   40,
+  INSERT:       45,
+  DELETE:       46,
+  DIGIT_0:      48,
+  DIGIT_1:      49,
+  DIGIT_2:      50,
+  DIGIT_3:      51,
+  DIGIT_4:      52,
+  DIGIT_5:      53,
+  DIGIT_6:      54,
+  DIGIT_7:      55,
+  DIGIT_8:      56,
+  DIGIT_9:      57,
+  LETTER_A:     65,
+  LETTER_B:     66,
+  LETTER_C:     67,
+  LETTER_D:     68,
+  LETTER_E:     69,
+  LETTER_F:     70,
+  LETTER_G:     71,
+  LETTER_H:     72,
+  LETTER_I:     73,
+  LETTER_J:     74,
+  LETTER_K:     75,
+  LETTER_L:     76,
+  LETTER_M:     77,
+  LETTER_N:     78,
+  LETTER_O:     79,
+  LETTER_P:     80,
+  LETTER_Q:     81,
+  LETTER_R:     82,
+  LETTER_S:     83,
+  LETTER_T:     84,
+  LETTER_U:     85,
+  LETTER_V:     86,
+  LETTER_W:     87,
+  LETTER_X:     88,
+  LETTER_Y:     89,
+  LETTER_Z:     90,
+  SEMI_COLON:  186,
+  EQUAL_SIGN:  187,
+  COMMA:       188,
+  DASH:        189,
+  PERIOD:      190,
+  FORWARD_SLASH: 191,
+  GRAVE_ACCENT:  192,
+  OPEN_BRACKET:  219,
+  BACK_SLASH:    220,
+  CLOSE_BRACKET: 221,
+  SINGLE_QUOTE:  222
+};
+function DS_activateKeyListeners() {
+  $(document).keyup(function(e) {
+    var keyCode = e.which;
+    switch (keyCode) {
+      case KeyCodes.LETTER_W:
+        DS_moveUp();
+        break;
+      case KeyCodes.LETTER_A:
+        DS_moveLeft();
+        break;
+      case KeyCodes.LETTER_S:
+        DS_moveDown();
+        break;
+      case KeyCodes.LETTER_D:
+        DS_moveRight();
+        break;
+    }
+  });
+}
 
 // ]]>
 </script>
