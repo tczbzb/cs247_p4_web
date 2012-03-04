@@ -486,6 +486,24 @@ function DS_previousStep() {
 	DS_flyToStep(DS_currentStep);
 }
 
+// Can only go to the current step's street view for now.
+function zoomInSwitch() {
+	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+	if (lookAt.getRange() < 100) {
+		var step = DS_steps[DS_currentStep];
+		lookAt.set(
+			step.loc.lat(),
+			step.loc.lng(),
+			5, // altitude
+			DS_ge.ALTITUDE_RELATIVE_TO_GROUND,
+			DS_geHelpers.getHeading(step.loc, DS_path[step.pathIndex + 1].loc),
+			90, // tilt
+			10 // range (inverse of zoom)
+		);
+		DS_ge.getView().setAbstractView(lookAt);
+	}
+}
+
 function DS_zoomIn() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
@@ -493,11 +511,16 @@ function DS_zoomIn() {
 	lookAt.setRange(lookAt.getRange() / 2.0);
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
+	zoomInSwitch();
 }
 
 function DS_zoomOut() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+	if (lookAt.getTilt() > 0) {
+		lookAt.setTilt(0);
+		lookAt.setRange(100);
+	}
 	// Zoom out to twice the current range.
 	lookAt.setRange(lookAt.getRange() * 2.0);
 	// Update the view in Google Earth.
