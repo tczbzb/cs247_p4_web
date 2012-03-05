@@ -531,13 +531,20 @@ function DS_zoomOut() {
 }
 
 // Driving Controls
-var DS_distanceStepInMeters = 50;
-function DS_moveRight() {
+var isAnimating = false;
+var DS_distanceStepInMeters = 20;
+var DS_turnStepInDegrees = 15;
+function DS_moveRight(nMeters) {
+  var distance = DS_distanceStepInMeters;
+  if (nMeters) {
+    distance = nMeters;
+  }
+  
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
 
 	// Trig! Calculate angles, vector components, etc.
-  var distInDegrees = metersToDegrees(DS_distanceStepInMeters);
+  var distInDegrees = metersToDegrees(distance);
   var theta = lookAt.getHeading();
 	var d_lat = -1 * distInDegrees * Math.cos(theta);
 	var d_lng = distInDegrees * Math.sin(theta);
@@ -549,12 +556,17 @@ function DS_moveRight() {
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 }
-function DS_moveLeft() {
-	// Get the current view.
+function DS_moveLeft(nMeters) {
+	var distance = DS_distanceStepInMeters;
+  if (nMeters) {
+    distance = nMeters;
+  }
+  
+  // Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
 
   // Trig! Calculate angles, vector components, etc.
-  var distInDegrees = metersToDegrees(DS_distanceStepInMeters);
+  var distInDegrees = metersToDegrees(distance);
   var theta = lookAt.getHeading();
 	var d_lat = distInDegrees * Math.cos(theta);
 	var d_lng = -1 * distInDegrees * Math.sin(theta);
@@ -566,12 +578,17 @@ function DS_moveLeft() {
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 }
-function DS_moveDown() {
-	// Get the current view.
+function DS_moveBackward(nMeters) {
+	var distance = DS_distanceStepInMeters;
+  if (nMeters) {
+    distance = nMeters;
+  }
+  
+  // Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
 
 	// Trig! Calculate angles, vector components, etc.
-  var distInDegrees = metersToDegrees(DS_distanceStepInMeters);
+  var distInDegrees = metersToDegrees(distance);
   var theta = lookAt.getHeading();
 	var d_lat = -1 * distInDegrees * Math.cos(theta);
 	var d_lng = -1 * distInDegrees * Math.sin(theta);
@@ -583,12 +600,17 @@ function DS_moveDown() {
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 }
-function DS_moveUp() {
-	// Get the current view.
+function DS_moveForward(nMeters) {
+	var distance = DS_distanceStepInMeters;
+  if (nMeters) {
+    distance = nMeters;
+  }
+  
+  // Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
   
   // Trig! Calculate angles, vector components, etc.
-  var distInDegrees = metersToDegrees(DS_distanceStepInMeters);
+  var distInDegrees = metersToDegrees(distance);
   var theta = lookAt.getHeading();
 	var d_lat = distInDegrees * Math.cos(theta);
 	var d_lng = distInDegrees * Math.sin(theta);
@@ -600,6 +622,43 @@ function DS_moveUp() {
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 }
+function DS_turnRight() {
+  // Get the current view.
+	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+
+	camera.setHeading(camera.getHeading() + DS_turnStepInDegrees);
+  
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(camera);
+}
+function DS_turnLeft() {
+  // Get the current view.
+	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+  
+  camera.setHeading(camera.getHeading() - DS_turnStepInDegrees);
+  
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(camera);
+}
+function DS_turnDown() {
+  // Get the current view.
+	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+  
+  camera.setTilt(camera.getTilt() - DS_turnStepInDegrees);
+  
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(camera);
+}
+function DS_turnUp() {
+  // Get the current view.
+	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+  
+  camera.setTilt(Math.min(90, camera.getTilt() + DS_turnStepInDegrees));
+	
+	// Update the view in Google Earth.
+	DS_ge.getView().setAbstractView(camera);
+}
+
 function metersToDegrees(nMeters) {
   return nMeters
           * (1/1852) // nautical miles in a meter (i.e. 1852 m = 1 nautical mile)

@@ -5,7 +5,6 @@
   <title>The Geocoders</title>
   <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
   <!-- API Key for code.google.com -->
-  <!--<script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=ABQIAAAAwbkbZLyhsmTCWXbTcjbgbRSzHs7K5SvaUdm8ua-Xxy_-2dYwMxQMhnagaawTo7L1FE1-amhuQxIlXw"></script>-->
   <script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=AIzaSyCfDRLK9tu-KA7Tt13BeIMEb22QHDGaa6c"></script>
   <style type="text/css">@import "index.css";</style>
   <script type="text/javascript" src="jquery-1.7.1.min.js"></script>
@@ -46,7 +45,7 @@ function DS_init() {
     },
     function() {
     });
-
+  
   function onresize() {
     var clientHeight = document.documentElement.clientHeight;
 
@@ -138,17 +137,40 @@ function DS_activateKeyListeners() {
   $(document).keyup(function(e) {
     var keyCode = e.which;
     switch (keyCode) {
+      // Moving
       case KeyCodes.LETTER_W:
-        DS_moveUp();
+        isAnimating = true;
+        DS_moveForward();
         break;
       case KeyCodes.LETTER_A:
+        isAnimating = true;
         DS_moveLeft();
         break;
       case KeyCodes.LETTER_S:
-        DS_moveDown();
+        isAnimating = true;
+        DS_moveBackward();
         break;
       case KeyCodes.LETTER_D:
+        isAnimating = true;
         DS_moveRight();
+        break;
+    
+      // Turning
+      case KeyCodes.LETTER_I:
+      isAnimating = true;
+        DS_turnUp();
+        break;
+      case KeyCodes.LETTER_J:
+        isAnimating = true;
+        DS_turnLeft();
+        break;
+      case KeyCodes.LETTER_K:
+        isAnimating = true;
+        DS_turnDown();
+        break;
+      case KeyCodes.LETTER_L:
+        isAnimating = true;
+        DS_turnRight();
         break;
     }
   });
@@ -178,8 +200,8 @@ function DS_activateKeyListeners() {
 			  <input type="submit" onclick="DS_zoomOut();" id="zoomout" value="Zoom Out"/>
 			  <input type="submit" onclick="DS_moveRight();" id="keyboardright" value="Right"/>
 			  <input type="submit" onclick="DS_moveLeft();" id="keyboardleft" value="Left"/>
-			  <input type="submit" onclick="DS_moveUp();" id="keyboardup" value="Up"/>
-			  <input type="submit" onclick="DS_moveDown();" id="keyboarddown" value="Down"/>
+			  <input type="submit" onclick="DS_moveForward();" id="keyboardup" value="Up"/>
+			  <input type="submit" onclick="DS_moveBackward();" id="keyboarddown" value="Down"/>
           </form>
         </td>
       </tr>
