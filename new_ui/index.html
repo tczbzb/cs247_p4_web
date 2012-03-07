@@ -319,8 +319,10 @@ var GeocodersApp = GA = {
         return;
       }
       
+      // Hide all other messages on this view.
       $view.find('.appCenteredMessage:visible').fadeOut('fast');
       
+      // Show the new message.
       $message.css({'top': '50px', 'opacity': 0.0});
       $message.show();
       $message.animate({
