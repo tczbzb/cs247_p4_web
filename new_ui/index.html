@@ -1,0 +1,271 @@
+<html>
+<head>
+  <link href="plugins/impress-js/css/geocoders.css" rel="stylesheet" />
+</head>
+<body class="GUnload();">
+  <div id="impress" class="impress-not-supported">
+    <div class="step"  data-x="0" data-y="-1500" data-rotate-y="-180">
+      <img src="images/geocoders-logo.png" />
+    </div>
+    <div class="step appView" data-x="0" data-y="0">
+      <div class="appCenteredMessage" style="padding-top: 150px;">
+        <img src="images/speech-bubble.gif" />
+        <h1>Speak your destination to begin</h1>
+        <h2>Go ahead, I'm listening!</h2>
+      </div>
+    </div>
+    <div class="step appView" data-x="1540" data-y="0">
+      <div class="appCenteredMessage">
+        <h2>I heard</h2>
+        <h1 class="location">"half moon bay"</h1>
+        <h2>Is this correct?</h2>
+      </div>
+    </div>
+    <div class="step appView" data-x="1540" data-y="0" data-z="1000">
+      <div class="appCenteredMessage">
+        <img src="images/checkmark.png" />
+        <h1>Destination Confirmed!</h1>
+      </div>
+    </div>
+    <div class="step appView" data-x="3080" data-y="0" data-z="1000">
+      <form id="directions-form" onsubmit="return false;" action="get">
+        From:<br/>
+        <input type="text" id="from" value="Stanford, CA" onclick="simulateKeyPress(101);"/><br/>
+        To:<br/>
+        <input type="text" id="to" value="Half Moon Bay, CA"/><br/>
+        <input type="submit" onclick="DS_goDirections();" id="go" value="Go!" onclick="impress().next();"/>
+			  <!--<input type="submit" onclick="DS_nextStep();" id="nextstep" value="Next"/>
+			  <input type="submit" onclick="DS_previousStep();" id="previousstep" value="Previous"/>
+			  <input type="submit" onclick="DS_zoomIn();" id="zoomin" value="Zoom In"/>
+			  <input type="submit" onclick="DS_zoomOut();" id="zoomout" value="Zoom Out"/>
+			  <input type="submit" onclick="DS_moveRight();" id="keyboardright" value="Right"/>
+			  <input type="submit" onclick="DS_moveLeft();" id="keyboardleft" value="Left"/>
+			  <input type="submit" onclick="DS_moveForward();" id="keyboardup" value="Up"/>
+			  <input type="submit" onclick="DS_moveBackward();" id="keyboarddown" value="Down"/>-->
+      </form>
+    </div>
+    <div class="step appView" data-x="4620" data-y="0" data-z="1000">
+      <div class="appCenteredMessage">
+        <img src="images/globe.gif" />
+        <h1>Calculating route...</h1>
+      </div>
+    </div>
+    <div class="step appView earthView" data-x="6160" data-y="0" data-z="1000">
+      <div id="earth"></div>
+      <div id="map"></div>
+      <div id="route-details"></div>
+      <div id="temp-shortcuts">
+        (may need to click on view once for these to work)<br/>
+        <br/>
+        W - Forward<br/>
+        S - Backward<br/>
+        A - Left<br/>
+        D - Right<br/>
+        <br/>
+        I - Tilt Up<br/>
+        K - Tilt Down<br/>
+        J - Rotate Left<br/>
+        L - Rotate Right<br/>
+        <br/>
+        Q - Previous Step in Route<br/>
+        E - Next Step in Route<br/>
+        <br/>
+        =&gt; - Pick a new destination<br/>
+      </div>
+    </div>
+  </div>
+</body>
+
+<!-- API Key for code.google.com -->
+<script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=AIzaSyCfDRLK9tu-KA7Tt13BeIMEb22QHDGaa6c"></script>
+<style type="text/css">@import "css/index.css";</style>
+<script type="text/javascript" src="plugins/jquery-1.7.1.min.js"></script>
+<script type="text/javascript" src="js/geplugin-helpers.js"></script>
+<script type="text/javascript" src="js/math3d.js"></script>
+<script type="text/javascript" src="js/index.js"></script>
+<script type="text/javascript" src="plugins/impress-js/js/impress.js"></script>
+<script>impress();</script>
+
+<script type="text/javascript">
+// <![CDATA[
+
+var DS_ge;
+var DS_geHelpers;
+var DS_map;
+
+google.load("jquery", "1");
+google.load("maps", "2.x");
+google.load("earth", "1");
+
+function DS_init() {
+  $('#directions-form input').attr('disabled', 'disabled');
+  
+  google.earth.createInstance(
+    'earth',
+    function(ge) {
+      DS_ge = ge;
+      DS_ge.getWindow().setVisibility(true);
+      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BUILDINGS, true);
+      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BORDERS, true);
+      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_ROADS, true);
+      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_TREES, true);
+      
+      DS_geHelpers = new GEHelpers(DS_ge);
+      
+      DS_ge.getNavigationControl().setVisibility(DS_ge.VISIBILITY_HIDE);
+      
+      DS_map = new GMap2($('#map').get(0));
+      DS_map.setCenter(new GLatLng(37.4419, -122.1419), 13);
+      DS_map.addControl(new GSmallMapControl());
+      DS_map.enableContinuousZoom();
+      
+      $('#directions-form input').removeAttr('disabled');
+    },
+    function() {
+    });
+  
+  /*function onresize() {
+    var clientHeight = document.documentElement.clientHeight;
+
+    $('#route-details, #earth, #map').each(function() {
+      $(this).css({
+        height: (clientHeight - $(this).position().top - 100).toString() + 'px' });      
+    }); 
+  }*/
+  
+  //$(window).resize(onresize);
+  //onresize();
+  
+  // Activate arrow-key powered driving.
+  DS_activateKeyListeners();
+}
+
+google.setOnLoadCallback(DS_init);
+
+var KeyCodes = {
+  BACKSPACE:     8,
+  TAB:           9,
+  ENTER:        13,
+  SHIFT:        16,
+  CTRL:         17,
+  ALT:          18,
+  PAUSE_BREAK:  19,
+  CAPS_LOCK:    20,
+  ESCAPE:       27,
+  SPACE:        32, 
+  PAGE_UP:      33,
+  PAGE_DOWN:    34,
+  END:          35,
+  HOME:         36,
+  LEFT_ARROW:   37,
+  UP_ARROW:     38,
+  RIGHT_ARROW:  39,
+  DOWN_ARROW:   40,
+  INSERT:       45,
+  DELETE:       46,
+  DIGIT_0:      48,
+  DIGIT_1:      49,
+  DIGIT_2:      50,
+  DIGIT_3:      51,
+  DIGIT_4:      52,
+  DIGIT_5:      53,
+  DIGIT_6:      54,
+  DIGIT_7:      55,
+  DIGIT_8:      56,
+  DIGIT_9:      57,
+  LETTER_A:     65,
+  LETTER_B:     66,
+  LETTER_C:     67,
+  LETTER_D:     68,
+  LETTER_E:     69,
+  LETTER_F:     70,
+  LETTER_G:     71,
+  LETTER_H:     72,
+  LETTER_I:     73,
+  LETTER_J:     74,
+  LETTER_K:     75,
+  LETTER_L:     76,
+  LETTER_M:     77,
+  LETTER_N:     78,
+  LETTER_O:     79,
+  LETTER_P:     80,
+  LETTER_Q:     81,
+  LETTER_R:     82,
+  LETTER_S:     83,
+  LETTER_T:     84,
+  LETTER_U:     85,
+  LETTER_V:     86,
+  LETTER_W:     87,
+  LETTER_X:     88,
+  LETTER_Y:     89,
+  LETTER_Z:     90,
+  SEMI_COLON:  186,
+  EQUAL_SIGN:  187,
+  COMMA:       188,
+  DASH:        189,
+  PERIOD:      190,
+  FORWARD_SLASH: 191,
+  GRAVE_ACCENT:  192,
+  OPEN_BRACKET:  219,
+  BACK_SLASH:    220,
+  CLOSE_BRACKET: 221,
+  SINGLE_QUOTE:  222
+};
+function DS_activateKeyListeners() {
+  $(document).keyup(function(e) {
+    var keyCode = e.which;
+    switch (keyCode) {
+      // Moving
+      case KeyCodes.LETTER_W:
+        isAnimating = true;
+        DS_moveForward();
+        break;
+      case KeyCodes.LETTER_A:
+        isAnimating = true;
+        DS_moveLeft();
+        break;
+      case KeyCodes.LETTER_S:
+        isAnimating = true;
+        DS_moveBackward();
+        break;
+      case KeyCodes.LETTER_D:
+        isAnimating = true;
+        DS_moveRight();
+        break;
+    
+      // Turning
+      case KeyCodes.LETTER_I:
+      isAnimating = true;
+        DS_turnUp();
+        break;
+      case KeyCodes.LETTER_J:
+        isAnimating = true;
+        DS_turnLeft();
+        break;
+      case KeyCodes.LETTER_K:
+        isAnimating = true;
+        DS_turnDown();
+        break;
+      case KeyCodes.LETTER_L:
+        isAnimating = true;
+        DS_turnRight();
+        break;
+        
+      // Google Earth View: Cycle Between Steps  
+      case KeyCodes.LETTER_Q:
+        DS_previousStep();
+        break;
+      case KeyCodes.LETTER_E:
+        DS_nextStep();
+        break;
+    }
+  });
+}
+
+$(document).ready(function() {
+  setTimeout("impress().next()", 2000);
+});
+// ]]>
+</script>
+
+<html>
