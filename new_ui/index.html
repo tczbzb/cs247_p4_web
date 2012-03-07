@@ -20,14 +20,12 @@
         <h1 class="location">"half moon bay"</h1>
         <h2>Is this correct?</h2>
       </div>
-    </div>
-    <div id="AppView_ConfirmOK" class="step appView" data-x="1490" data-y="0" data-z="1000">
-      <div class="appCenteredMessage">
+      <div id="AppView_Confirm_OK" class="appCenteredMessage" style="display: none;">
         <img src="images/checkmark.png" />
         <h1>Destination Confirmed!</h1>
       </div>
     </div>
-    <div id="AppView_Temp" class="step appView" data-x="2980" data-y="0" data-z="1000">
+    <div id="AppView_Temp" class="step appView" data-x="2980" data-y="0">
       <form id="directions-form" onsubmit="return false;" action="get">
         From:<br/>
         <input type="text" id="from" value="Stanford, CA" onclick="simulateKeyPress(101);"/><br/>
@@ -36,31 +34,31 @@
         <input type="submit" onclick="DS_goDirections();" id="go" value="Go!" onclick="impress().next();"/>
       </form>
     </div>
-    <div id="AppView_Fetching" class="step appView" data-x="4470" data-y="0" data-z="1000">
+    <div id="AppView_Fetching" class="step appView" data-x="4470" data-y="0">
       <div class="appCenteredMessage">
         <img src="images/globe.gif" />
         <h1>Calculating route...</h1>
       </div>
     </div>
-    <div id="AppView_Earth" class="step appView earthView" data-x="5960" data-y="0" data-z="1000">
+    <div id="AppView_Earth" class="step appView earthView" data-x="5960" data-y="0">
       <div id="earth"></div>
       <div id="map"></div>
       <div id="route-details"></div>
       <div id="temp-shortcuts">
         (may need to click on view once for these to work)<br/>
         <br/>
-        W - Forward<br/>
-        S - Backward<br/>
-        A - Left<br/>
-        D - Right<br/>
+        T - Forward<br/>
+        G - Backward<br/>
+        F - Left<br/>
+        H - Right<br/>
         <br/>
         I - Tilt Up<br/>
         K - Tilt Down<br/>
         J - Rotate Left<br/>
         L - Rotate Right<br/>
         <br/>
-        Q - Previous Step in Route<br/>
-        E - Next Step in Route<br/>
+        R - Previous Step in Route<br/>
+        Y - Next Step in Route<br/>
         <br/>
         =&gt; - Pick a new destination<br/>
       </div>
@@ -78,6 +76,7 @@
 <script type="text/javascript" src="plugins/impress-js/js/impress.js"></script>
 <script>impress();</script>
 
+<!-- Driving Simulator/Directions -->
 <script type="text/javascript">
 // <![CDATA[
 
@@ -257,10 +256,10 @@ function DS_activateKeyListeners() {
         break;
         
       // Google Earth View: Cycle Between Steps  
-      case KeyCodes.LETTER_Q:
+      case KeyCodes.LETTER_R:
         DS_previousStep();
         break;
-      case KeyCodes.LETTER_E:
+      case KeyCodes.LETTER_Y:
         DS_nextStep();
         break;
     }
@@ -269,8 +268,75 @@ function DS_activateKeyListeners() {
 
 $(document).ready(function() {
   setTimeout("impress().next()", 2000);
+  GA.init();
 });
 // ]]>
 </script>
 
+<script type="text/javascript">
+var GeocodersApp = GA = {
+  
+  init: function() {
+    GA.Views.init();
+  },
+  
+  Views: {
+    init: function() {
+      this.initView('AppView_Confirm');
+    },
+    initView: function(viewID) {
+      var self = this;
+      
+      $view = $('#' + viewID);
+      if (!$view) {
+        console.err('View with ID #' + viewID + ' does not exist');
+        return;
+      } else {
+        
+        if (viewID == 'AppView_Confirm') {
+          $view.click(function() {
+            GA.Views.showCenteredMessage(viewID, 'AppView_Confirm_OK', self.showNextView, 750);
+          });
+        }
+
+      }
+    },
+    showNextView: function(viewID) {
+      impress().next();
+    },
+    showCenteredMessage: function(viewID, messageID, callbackFunc, callbackDelay) {
+      var $view = $('#' + viewID);
+      if (!$view) {
+        console.err('View with ID #' + viewID + ' does not exist');
+        return;
+      }
+        
+      var $message = $view.find('.appCenteredMessage#' + messageID);
+      if (!$message) {
+        console.err('Message with ID #' + messageID + ' in #' + viewID + ' does not exist');
+        return;
+      } else if ($message.is(':visible')) {
+        return;
+      }
+      
+      $view.find('.appCenteredMessage:visible').fadeOut('fast');
+      
+      $message.css({'top': '50px', 'opacity': 0.0});
+      $message.show();
+      $message.animate({
+        top: '-=50',
+        opacity: '1'
+      }, function() {
+        // Callback delay used after showing confirmation alerts, etc.
+        if (callbackDelay && callbackDelay > 0) {
+          setTimeout(callbackFunc, callbackDelay);
+        } else {
+          setTimeout(callbackFunc, 0);
+        }
+      });
+    }
+  }  
+};
+
+</script>
 <html>
