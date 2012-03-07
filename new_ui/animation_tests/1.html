@@ -1,0 +1,149 @@
+<style type="text/css">
+body	{
+	margin:			0px;
+	padding:		0px;
+	width:			100%;
+	height:			100%;
+}
+
+.dot1	{
+	position:		absolute;
+	width: 			6px;
+	height:			6px;
+	background: red;
+	border-radius: 10px;
+	/*background-image:	url('red_dot.gif');*/
+	font-size: 		1px;
+}
+
+.dot2	{
+	position:		absolute;
+	width: 			6px;
+	height:			6px;
+	background: blue;
+	border-radius: 10px;
+	/*background-image:	url('blue_dot.gif');*/
+	font-size:		1px;
+}
+
+.pix	{
+	position:		absolute;
+	width:			3px;
+	height:			3px;
+	background: black;
+	border-radius: 10px;
+	/*background-image:	url('small_dot.gif');*/
+	font-size:		1px;
+}
+
+p	{
+	font-size:		11px;
+	font-family:		tahoma,arial,helvetica;
+	color:			#000000;
+	background-color:	#FFFFFF;
+}
+
+body	{
+	margin:			0px;
+	padding:		0px;
+	overflow:		hidden;
+	background-color:	#FFFFFF;
+}
+
+#divBox	{
+	position:		absolute;
+	top:			50px;
+	left:			50px;
+	width:			6px;
+	height:			6px;
+	background: red;
+	border-radius: 10px;
+	/*background-image:	url('red_dot.gif');*/
+	font-size:		1px;
+}
+
+input {
+	font-size:		10px;
+	font-family:		tahoma;
+	width:			20px;
+}
+
+#divContainer {
+	position:		absolute;
+	top:			50px;
+	left:			50px;
+	width:			500px;
+	height:			300px;
+	border:			1px solid black;
+	background:		#EEE;
+	overflow:		hidden;
+}
+#divWater {
+	position:		absolute;
+	top:			200px;
+	left:			0px;
+	width:			499px;
+	height:			99px;
+	background:		lightBlue;
+	opacity: 0.6;
+	overflow:		hidden;
+}
+.blob {
+	position:		absolute;
+	width:			5px;
+	height:			5px;
+	background: red;
+	border-radius: 10px;
+	/*background-image:	url('small_red_dot.gif');*/
+	font-size:		1px;
+}
+#divWater2 {
+	position:		absolute;
+	top:			250px;
+	left:			50px;
+	width:			499px;
+	height:			99px;
+	background: blue;
+	opacity: 0.6;
+	/*background-image:	url('pond.gif');*/
+	overflow:		hidden;
+}
+
+</style>
+<script type="text/javascript">
+function getRef(name) { return document.getElementById(name); }
+
+var speed = 0;
+var acc = 2;
+var prevX = 0;
+function animate(curX,endX) {
+	//position box vertically
+	getRef("divBox").style.top = 50 + "%";
+  
+	if (curX > endX) {	//finished animation
+		getRef("divBox").style.left = endX + "px";
+	} else {
+	  prevX = curX;
+	  if (curX < 150){
+	    speed += 10*acc;	//accellerate
+    } else {
+      speed += -1.75*acc;	//accellerate
+    }
+    if (curX + speed > prevX) {
+		  getRef("divBox").style.left = curX + "px";
+		  setTimeout("animate(" + (curX+speed) + "," + endX + ");",50);
+	  } else {
+	    getRef("divBox").style.left = curX + "px";
+	  }
+	}
+}
+</script>
+
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+<body onLoad="animate(0, 1440);">
+  <div id="divBox" style="top: 150px; left: 350px; "></div>
+</body>
+</html>

@@ -4,53 +4,45 @@
 </head>
 <body class="GUnload();">
   <div id="impress" class="impress-not-supported">
-    <div class="step"  data-x="0" data-y="-1500" data-rotate-y="-180">
+    <div id="AppView_Logo" class="step" data-x="0" data-y="-1500" data-rotate-y="-180">
       <img src="images/geocoders-logo.png" />
     </div>
-    <div class="step appView" data-x="0" data-y="0">
+    <div id="AppView_Input" class="step appView" data-x="0" data-y="0">
       <div class="appCenteredMessage" style="padding-top: 150px;">
         <img src="images/speech-bubble.gif" />
         <h1>Speak your destination to begin</h1>
         <h2>Go ahead, I'm listening!</h2>
       </div>
     </div>
-    <div class="step appView" data-x="1540" data-y="0">
+    <div id="AppView_Confirm" class="step appView" data-x="1490" data-y="0">
       <div class="appCenteredMessage">
         <h2>I heard</h2>
         <h1 class="location">"half moon bay"</h1>
         <h2>Is this correct?</h2>
       </div>
     </div>
-    <div class="step appView" data-x="1540" data-y="0" data-z="1000">
+    <div id="AppView_ConfirmOK" class="step appView" data-x="1490" data-y="0" data-z="1000">
       <div class="appCenteredMessage">
         <img src="images/checkmark.png" />
         <h1>Destination Confirmed!</h1>
       </div>
     </div>
-    <div class="step appView" data-x="3080" data-y="0" data-z="1000">
+    <div id="AppView_Temp" class="step appView" data-x="2980" data-y="0" data-z="1000">
       <form id="directions-form" onsubmit="return false;" action="get">
         From:<br/>
         <input type="text" id="from" value="Stanford, CA" onclick="simulateKeyPress(101);"/><br/>
         To:<br/>
         <input type="text" id="to" value="Half Moon Bay, CA"/><br/>
         <input type="submit" onclick="DS_goDirections();" id="go" value="Go!" onclick="impress().next();"/>
-			  <!--<input type="submit" onclick="DS_nextStep();" id="nextstep" value="Next"/>
-			  <input type="submit" onclick="DS_previousStep();" id="previousstep" value="Previous"/>
-			  <input type="submit" onclick="DS_zoomIn();" id="zoomin" value="Zoom In"/>
-			  <input type="submit" onclick="DS_zoomOut();" id="zoomout" value="Zoom Out"/>
-			  <input type="submit" onclick="DS_moveRight();" id="keyboardright" value="Right"/>
-			  <input type="submit" onclick="DS_moveLeft();" id="keyboardleft" value="Left"/>
-			  <input type="submit" onclick="DS_moveForward();" id="keyboardup" value="Up"/>
-			  <input type="submit" onclick="DS_moveBackward();" id="keyboarddown" value="Down"/>-->
       </form>
     </div>
-    <div class="step appView" data-x="4620" data-y="0" data-z="1000">
+    <div id="AppView_Fetching" class="step appView" data-x="4470" data-y="0" data-z="1000">
       <div class="appCenteredMessage">
         <img src="images/globe.gif" />
         <h1>Calculating route...</h1>
       </div>
     </div>
-    <div class="step appView earthView" data-x="6160" data-y="0" data-z="1000">
+    <div id="AppView_Earth" class="step appView earthView" data-x="5960" data-y="0" data-z="1000">
       <div id="earth"></div>
       <div id="map"></div>
       <div id="route-details"></div>
@@ -98,46 +90,62 @@ google.load("maps", "2.x");
 google.load("earth", "1");
 
 function DS_init() {
+  /*** 
+   * Disable the button used to submit requests for driving
+   * directions, until everything is initialized successfully.
+   ***/
   $('#directions-form input').attr('disabled', 'disabled');
   
   google.earth.createInstance(
     'earth',
     function(ge) {
       DS_ge = ge;
-      DS_ge.getWindow().setVisibility(true);
+      
+      /***
+       * Hide the navigation controls in the Google Earth window.
+       ***/
+      DS_ge.getNavigationControl().setVisibility(DS_ge.VISIBILITY_HIDE);
+      
+      /***
+       * Show various overlays and 3D objects on the Earth's surface.
+       ***/
       DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BUILDINGS, true);
       DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BORDERS, true);
       DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_ROADS, true);
       DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_TREES, true);
       
+      /***
+       * Initialize the handle to the Google Earth helper functions.
+       ***/
       DS_geHelpers = new GEHelpers(DS_ge);
       
-      DS_ge.getNavigationControl().setVisibility(DS_ge.VISIBILITY_HIDE);
-      
+      /***
+       * Initialize the Google Map for handling driving directions.
+       ***/
       DS_map = new GMap2($('#map').get(0));
-      DS_map.setCenter(new GLatLng(37.4419, -122.1419), 13);
-      DS_map.addControl(new GSmallMapControl());
-      DS_map.enableContinuousZoom();
       
+      /***
+       * Show the Google Earth window.
+       ***/
+      DS_ge.getWindow().setVisibility(true);
+      
+      /*** 
+       * Once everything is initialized successfully, activate the
+       * button used to submit requests for driving directions.
+       ***/ 
       $('#directions-form input').removeAttr('disabled');
+      
+      DS_activateKeyListeners();
     },
     function() {
+      /***
+       * This function will be called if plugin fails to load, in case
+       * we need to handle that error condition.
+       ***/
     });
   
-  /*function onresize() {
-    var clientHeight = document.documentElement.clientHeight;
-
-    $('#route-details, #earth, #map').each(function() {
-      $(this).css({
-        height: (clientHeight - $(this).position().top - 100).toString() + 'px' });      
-    }); 
-  }*/
-  
-  //$(window).resize(onresize);
-  //onresize();
-  
   // Activate arrow-key powered driving.
-  DS_activateKeyListeners();
+  //DS_activateKeyListeners();
 }
 
 google.setOnLoadCallback(DS_init);
@@ -214,41 +222,38 @@ var KeyCodes = {
 function DS_activateKeyListeners() {
   $(document).keyup(function(e) {
     var keyCode = e.which;
+    console.log('keyup event fired: ' + keyCode);
     switch (keyCode) {
       // Moving
-      case KeyCodes.LETTER_W:
+      case KeyCodes.LETTER_T:
         isAnimating = true;
-        DS_moveForward();
+        DS_move('forward');
         break;
-      case KeyCodes.LETTER_A:
+      case KeyCodes.LETTER_F:
         isAnimating = true;
-        DS_moveLeft();
+        DS_move('left');
         break;
-      case KeyCodes.LETTER_S:
+      case KeyCodes.LETTER_G:
         isAnimating = true;
-        DS_moveBackward();
+        DS_move('backward');
         break;
-      case KeyCodes.LETTER_D:
+      case KeyCodes.LETTER_H:
         isAnimating = true;
-        DS_moveRight();
+        DS_move('right');
         break;
     
       // Turning
       case KeyCodes.LETTER_I:
-      isAnimating = true;
-        DS_turnUp();
+        DS_rotateCamera('up');
         break;
       case KeyCodes.LETTER_J:
-        isAnimating = true;
-        DS_turnLeft();
+        DS_rotateCamera('left');
         break;
       case KeyCodes.LETTER_K:
-        isAnimating = true;
-        DS_turnDown();
+        DS_rotateCamera('down');
         break;
       case KeyCodes.LETTER_L:
-        isAnimating = true;
-        DS_turnRight();
+        DS_rotateCamera('right');
         break;
         
       // Google Earth View: Cycle Between Steps  

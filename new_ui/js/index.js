@@ -321,18 +321,33 @@ function DS_highlightStep(stepNum) {
  * all items in the left directions list
  * @param {google.maps.LatLng} loc The location to fly the camera to
  */
-function DS_flyToLatLng(loc) {
-  var la = DS_ge.createLookAt('');
-  la.set(loc.lat(), loc.lng(),
-      10, // altitude
-      DS_ge.ALTITUDE_RELATIVE_TO_GROUND,
-      90, // heading
-      0, // tilt
-      200 // range (inverse of zoom)
-      );
-  DS_ge.getView().setAbstractView(la);
+function DS_flyToLatLng(lat, lng) {
+  // var la = DS_ge.createLookAt('');
+  //   la.set(loc.lat(), loc.lng(),
+  //       10, // altitude
+  //       DS_ge.ALTITUDE_RELATIVE_TO_GROUND,
+  //       90, // heading
+  //       0, // tilt
+  //       200 // range (inverse of zoom)
+  //       );
+  //   DS_ge.getView().setAbstractView(la);
   
-  $('#route-details li').removeClass('sel');
+  //$('#route-details li').removeClass('sel');
+  var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+  //var newLookAt = DS_ge.createLookAt('');
+  //newLookAt.set(
+    // lat,                    /* Latitude */  
+    //   lng,                    /* Longitude */ 
+    //   curLookAt.getAltitude(),   /* Altitude */  
+    //   DS_ge.ALTITUDE_RELATIVE_TO_GROUND,
+    //   curLookAt.getHeading(),    /* Heading */
+    //   70,                     /* Tilt */
+    //   curLookAt.getRange()
+    // );
+  lookAt.setLatitude(lat);
+  lookAt.setLongitude(lng);
+  
+  DS_ge.getView().setAbstractView(lookAt);
 }
 
 /**
@@ -550,136 +565,75 @@ function DS_zoomOut() {
 }
 
 // Driving Controls
-var isAnimating = false;
-var DS_distanceStepInMeters = 20;
-var DS_turnStepInDegrees = 15;
-function DS_moveRight(nMeters) {
-  var distance = DS_distanceStepInMeters;
-  if (nMeters) {
-    distance = nMeters;
-  }
-  
-	// Get the current view.
-	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-
-	// Trig! Calculate angles, vector components, etc.
-  var distInDegrees = metersToDegrees(distance);
-  var theta = lookAt.getHeading();
-	var d_lat = -1 * distInDegrees * Math.cos(theta);
-	var d_lng = distInDegrees * Math.sin(theta);
-	
-	// Update latitude and longitude for the new position.
-	lookAt.setLatitude(lookAt.getLatitude() + d_lat);
-	lookAt.setLongitude(lookAt.getLongitude() + d_lng);
-	
-	// Update the view in Google Earth.
-	DS_ge.getView().setAbstractView(lookAt);
-}
-function DS_moveLeft(nMeters) {
-	var distance = DS_distanceStepInMeters;
-  if (nMeters) {
-    distance = nMeters;
-  }
-  
-  // Get the current view.
-	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-
-  // Trig! Calculate angles, vector components, etc.
-  var distInDegrees = metersToDegrees(distance);
-  var theta = lookAt.getHeading();
-	var d_lat = distInDegrees * Math.cos(theta);
-	var d_lng = -1 * distInDegrees * Math.sin(theta);
-	
-	// Update latitude and longitude for the new position.
-	lookAt.setLatitude(lookAt.getLatitude() + d_lat);
-	lookAt.setLongitude(lookAt.getLongitude() + d_lng);
-  
-	// Update the view in Google Earth.
-	DS_ge.getView().setAbstractView(lookAt);
-}
-function DS_moveBackward(nMeters) {
-	var distance = DS_distanceStepInMeters;
-  if (nMeters) {
-    distance = nMeters;
-  }
-  
-  // Get the current view.
-	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-
-	// Trig! Calculate angles, vector components, etc.
-  var distInDegrees = metersToDegrees(distance);
-  var theta = lookAt.getHeading();
-	var d_lat = -1 * distInDegrees * Math.cos(theta);
-	var d_lng = -1 * distInDegrees * Math.sin(theta);
-	
-	// Update latitude and longitude for the new position.
-	lookAt.setLatitude(lookAt.getLatitude() + d_lat);
-	lookAt.setLongitude(lookAt.getLongitude() + d_lng);
-	
-	// Update the view in Google Earth.
-	DS_ge.getView().setAbstractView(lookAt);
-}
-function DS_moveForward(nMeters) {
-	var distance = DS_distanceStepInMeters;
-  if (nMeters) {
-    distance = nMeters;
-  }
-  
+var DS_stepDistanceInMeters = 500;
+var DS_stepRotationInDegrees = 15;
+function DS_move(direction) {
   // Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
   
-  // Trig! Calculate angles, vector components, etc.
-  var distInDegrees = metersToDegrees(distance);
-  var theta = lookAt.getHeading();
-	var d_lat = distInDegrees * Math.cos(theta);
-	var d_lng = distInDegrees * Math.sin(theta);
+  // Get the current heading angle in radians, and the location vector [lat, long, alt]
+  var headingAngle = lookAt.getHeading() * (Math.PI / 180);
+  var localAnchorLla = [lookAt.getLatitude(), lookAt.getLongitude(), lookAt.getAltitude()];
 	
-	// Update latitude and longitude for the new position.
-	lookAt.setLatitude(lookAt.getLatitude() + d_lat);
-	lookAt.setLongitude(lookAt.getLongitude() + d_lng);
-
-	// Update the view in Google Earth.
+	// Convert local lat/lon to a global matrix. The up vector is 
+  // vector = position - center of earth. And the right vector is a vector
+  // pointing eastwards and the facing vector is pointing towards north.
+  var localToGlobalFrame = M33.makeLocalToGlobalFrame(localAnchorLla); 
+	
+	// Move in heading direction by rotating the facing vector around
+  // the up vector, in the angle specified by the heading angle.
+  // Strafing is similar, except it's aligned towards the right vec.
+  var headingVec = V3.rotate(localToGlobalFrame[1], localToGlobalFrame[2], -headingAngle);                             
+  var rightVec = V3.rotate(localToGlobalFrame[0], localToGlobalFrame[2], -headingAngle);
+	
+	// Calculate strafe/forwards
+	var sideways = 0;
+  var forward = 0;
+  var distanceStep = DS_stepDistanceInMeters + (lookAt.getRange()); // Scale the distance step by the current camera range.
+  if (direction == 'right') {
+    sideways = distanceStep;
+  } else if (direction == 'left') {
+    sideways = -1 * distanceStep;
+  } else if (direction == 'forward') {
+    forward = distanceStep;
+  } else if (direction == 'backward') {
+    forward = -1 * distanceStep;
+  }
+  
+  // Add the change in position due to forward displacement and strafe displacement. 
+  var localAnchorCartesian = V3.latLonAltToCartesian(localAnchorLla);
+  localAnchorCartesian = V3.add(localAnchorCartesian, V3.scale(rightVec, sideways));
+	localAnchorCartesian = V3.add(localAnchorCartesian, V3.scale(headingVec, forward));
+  
+  // Convert cartesian to Lat Lon Altitude for camera setup later on.
+  localAnchorLla = V3.cartesianToLatLonAlt(localAnchorCartesian);
+	
+	// Update the user's location on the earth view.
+	lookAt.setLatitude(localAnchorLla[0]);
+	lookAt.setLongitude(localAnchorLla[1]);
+	lookAt.setAltitude(DS_ge.getGlobe().getGroundAltitude(localAnchorLla[0], localAnchorLla[1]));
 	DS_ge.getView().setAbstractView(lookAt);
 }
-function DS_turnRight() {
-  // Get the current view.
-	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-
-	camera.setHeading(camera.getHeading() + DS_turnStepInDegrees);
-  
-	// Update the view in Google Earth.
-	DS_ge.getView().setAbstractView(camera);
-}
-function DS_turnLeft() {
-  // Get the current view.
+function DS_rotateCamera(direction) {
+  // Get the current camera view.
 	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
   
-  camera.setHeading(camera.getHeading() - DS_turnStepInDegrees);
+  var tilt = 0;
+  var heading = 0;
+  if (direction == 'right') {
+    heading = DS_stepRotationInDegrees;
+  } else if (direction == 'left') {
+    heading = -1 * DS_stepRotationInDegrees
+  } else if (direction == 'up') {
+    tilt = DS_stepRotationInDegrees;
+  } else if (direction == 'down') {
+    tilt = -1 * DS_stepRotationInDegrees;
+  }
   
-	// Update the view in Google Earth.
+  // Update tilt and heading.
+  camera.setHeading(camera.getHeading() + heading);
+  camera.setTilt(Math.min(90, camera.getTilt() + tilt));
+  
+  // Update the camera view in Google Earth.
 	DS_ge.getView().setAbstractView(camera);
-}
-function DS_turnDown() {
-  // Get the current view.
-	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-  
-  camera.setTilt(camera.getTilt() - DS_turnStepInDegrees);
-  
-	// Update the view in Google Earth.
-	DS_ge.getView().setAbstractView(camera);
-}
-function DS_turnUp() {
-  // Get the current view.
-	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-  
-  camera.setTilt(Math.min(90, camera.getTilt() + DS_turnStepInDegrees));
-	
-	// Update the view in Google Earth.
-	DS_ge.getView().setAbstractView(camera);
-}
-
-function metersToDegrees(nMeters) {
-  return nMeters
-          * (1/1852) // nautical miles in a meter (i.e. 1852 m = 1 nautical mile)
-          * (1/60);  // degrees in a nautical mile (i.e. 60 nautical miles = 1 degree)
 }

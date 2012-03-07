@@ -300,8 +300,6 @@
             current = target;
             active = el;
             
-            $('#earth').click();
-            
             return el;
         };
         
