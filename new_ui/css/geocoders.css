@@ -59,10 +59,23 @@ body button {
 /* AppView */
 .appView {
   background: white;
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#F8F8F8), color-stop(100%,#E8E8E8)); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top, #F8F8F8 0%,#E8E8E8 100%);
+  background: white;
+  background-image: linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -o-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -moz-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -webkit-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -ms-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -webkit-gradient(
+  	linear,
+  	left bottom,
+  	left top,
+  	color-stop(0, rgb(232,232,232)),
+  	color-stop(1, rgb(248,248,248))
+  );
   border-top: 10px solid #00baff;
   box-shadow: 0 3px 5px black, inset 0 1px 0 white;
+  -webkit-box-shadow: 0 3px 5px black, inset 0 1px 0 white;
+  -moz-box-shadow: 0 3px 5px black, inset 0 1px 0 white;
   display: block;
   font-family: 'Open Sans', Arial, sans-serif;
   font-size: 30px;
@@ -121,6 +134,7 @@ body button {
   left: 0;
   position: absolute;
   right: 0;
+  text-align: left;
   width: 1000000px;
   z-index: 101; /* just above Google Earth Terms of Use div */
 }
@@ -133,12 +147,25 @@ body button {
   width: 1340px;
 }
 #route-details li .dirStepContent {
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#F8F8F8), color-stop(100%,#E8E8E8)); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top, #F8F8F8 0%,#E8E8E8 100%);
+  background: white;
+  background-image: linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -o-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -moz-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -webkit-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -ms-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  background-image: -webkit-gradient(
+  	linear,
+  	left bottom,
+  	left top,
+  	color-stop(0, rgb(232,232,232)),
+  	color-stop(1, rgb(248,248,248))
+  );
   border-top: 5px solid #00baff;
   /*border-top-left-radius: 5px;
   border-top-right-radius: 5px;*/
   box-shadow: 0 -2px 10px black, inset 0 1px 0 white;
+  -webkit-box-shadow: 0 -2px 10px black, inset 0 1px 0 white;
+  -moz-box-shadow: 0 -2px 10px black, inset 0 1px 0 white;
   display: table;
   font-size: 30px;
   height: 100px;
@@ -157,6 +184,8 @@ body button {
   border-bottom: 5px solid #00baff;
   border-top: none;
   box-shadow: 0 2px 10px black, inset 0 -1px 0 white; 
+  -webkit-box-shadow: 0 2px 10px black, inset 0 -1px 0 white; 
+  -moz-box-shadow: 0 2px 10px black, inset 0 -1px 0 white; 
 }
 #route-details li .dirStepContent .description {
   display: table-cell;
@@ -181,6 +210,9 @@ body button {
   border-right: 1px solid #444;
   border-bottom: 1px solid #444;
   box-shadow: 1px 1px 1px black;
+  -webkit-box-shadow: 1px 1px 1px black;
+  -moz-box-shadow: 1px 1px 1px black;
+  display: none;
   color: white;
   font-size: 13px;
   font-weight: bold;
