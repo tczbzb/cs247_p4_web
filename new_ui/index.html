@@ -1,6 +1,6 @@
 <html>
 <head>
-  <link href="plugins/impress-js/css/geocoders.css" rel="stylesheet" />
+  <link href="css/geocoders.css" rel="stylesheet" />
 </head>
 <body class="GUnload();">
   <div id="impress" class="impress-not-supported">
@@ -72,6 +72,7 @@
 <script type="text/javascript" src="plugins/jquery-1.7.1.min.js"></script>
 <script type="text/javascript" src="js/geplugin-helpers.js"></script>
 <script type="text/javascript" src="js/math3d.js"></script>
+<script type="text/javascript" src="js/simulator.js"></script>
 <script type="text/javascript" src="js/index.js"></script>
 <script type="text/javascript" src="plugins/impress-js/js/impress.js"></script>
 <script>impress();</script>
@@ -134,7 +135,10 @@ function DS_init() {
        ***/ 
       $('#directions-form input').removeAttr('disabled');
       
+      // Activate arrow-key powered navigation.
       DS_activateKeyListeners();
+      
+      DS_ge.getWindow().focus();
     },
     function() {
       /***
@@ -142,13 +146,10 @@ function DS_init() {
        * we need to handle that error condition.
        ***/
     });
-  
-  // Activate arrow-key powered driving.
-  //DS_activateKeyListeners();
 }
-
 google.setOnLoadCallback(DS_init);
 
+var isDriving = false;
 var KeyCodes = {
   BACKSPACE:     8,
   TAB:           9,
@@ -223,21 +224,34 @@ function DS_activateKeyListeners() {
     var keyCode = e.which;
     console.log('keyup event fired: ' + keyCode);
     switch (keyCode) {
+      // Start Driving
+      case KeyCodes.SPACE:
+        if (isDriving) {
+          DS_controlSimulator('pause');
+          isDriving = false;
+        } else {
+          DS_controlSimulator('start');
+          isDriving = true;
+        }
+        break;
+      case KeyCodes.DIGIT_1:
+        DS_controlSimulator('slower');
+        break;
+      case KeyCodes.DIGIT_2:
+        DS_controlSimulator('faster');
+        break;
+      
       // Moving
       case KeyCodes.LETTER_T:
-        isAnimating = true;
         DS_move('forward');
         break;
       case KeyCodes.LETTER_F:
-        isAnimating = true;
         DS_move('left');
         break;
       case KeyCodes.LETTER_G:
-        isAnimating = true;
         DS_move('backward');
         break;
       case KeyCodes.LETTER_H:
-        isAnimating = true;
         DS_move('right');
         break;
     
@@ -270,9 +284,12 @@ $(document).ready(function() {
   setTimeout("impress().next()", 2000);
   GA.init();
 });
+
 // ]]>
 </script>
+<!-- END Driving Simulator/Directions -->
 
+<!-- Application Views -->
 <script type="text/javascript">
 var GeocodersApp = GA = {
   
@@ -287,49 +304,56 @@ var GeocodersApp = GA = {
     initView: function(viewID) {
       var self = this;
       
+      // Try to get the desired view.
       $view = $('#' + viewID);
+      
       if (!$view) {
+        // Print an error and return if it does not exist in the DOM.
         console.err('View with ID #' + viewID + ' does not exist');
         return;
       } else {
-        
+        // If the view was found, take appropriate action based on the view ID.
         if (viewID == 'AppView_Confirm') {
           $view.click(function() {
             GA.Views.showCenteredMessage(viewID, 'AppView_Confirm_OK', self.showNextView, 750);
           });
         }
-
       }
     },
     showNextView: function(viewID) {
       impress().next();
     },
     showCenteredMessage: function(viewID, messageID, callbackFunc, callbackDelay) {
+      // Try to get the desired view. Throw an error if it was not found.
       var $view = $('#' + viewID);
       if (!$view) {
         console.err('View with ID #' + viewID + ' does not exist');
         return;
       }
-        
+      
+      // Try to get the desired message in the view. Throw an error if it was not found.
       var $message = $view.find('.appCenteredMessage#' + messageID);
       if (!$message) {
         console.err('Message with ID #' + messageID + ' in #' + viewID + ' does not exist');
         return;
-      } else if ($message.is(':visible')) {
+      }
+      
+      // Return immediately if the desired message is already visible.
+      if ($message.is(':visible')) {
         return;
       }
       
       // Hide all other messages on this view.
       $view.find('.appCenteredMessage:visible').fadeOut('fast');
       
-      // Show the new message.
+      // Show the new message with a nice animation.
       $message.css({'top': '50px', 'opacity': 0.0});
       $message.show();
       $message.animate({
         top: '-=50',
         opacity: '1'
       }, function() {
-        // Callback delay used after showing confirmation alerts, etc.
+        // Execute the callback function after the desired delay.
         if (callbackDelay && callbackDelay > 0) {
           setTimeout(callbackFunc, callbackDelay);
         } else {
@@ -341,4 +365,6 @@ var GeocodersApp = GA = {
 };
 
 </script>
+<!-- END Application Views -->
+
 <html>
