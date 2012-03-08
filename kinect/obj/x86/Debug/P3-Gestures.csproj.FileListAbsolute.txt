@@ -1,0 +1,16 @@
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\MainWindow.baml
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\MainWindow.g.cs
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\App.g.cs
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\SkeletalTracking_MarkupCompile.cache
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\SkeletalTracking.g.resources
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\SkeletalTracking.Properties.Resources.resources
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\bin\Debug\SkeletalTracking.exe
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\bin\Debug\SkeletalTracking.pdb
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\bin\Debug\Coding4Fun.Kinect.WinForm.dll
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\bin\Debug\Coding4Fun.Kinect.Wpf.dll
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\bin\Debug\WebKitBrowser.dll
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\SkeletalTracking.exe
+C:\Users\bzhang\Desktop\P3StarterCode (4)\P3StarterCode\obj\x86\Debug\SkeletalTracking.pdb
