@@ -18,7 +18,7 @@ namespace SkeletalTracking
             : base(win)
         {
             window = win;
-            window.webBrowser1.Navigate("C:\\Users\\bzhang\\Documents\\Stanford\\CS247\\P4\\cs247_p4_web\\orig_ui\\index.html");
+            window.webBrowser1.Navigate("http://www.cmslewis.com/cs247/final_project/orig_ui/index.html");
         }
 
         private ulong count = 0;
