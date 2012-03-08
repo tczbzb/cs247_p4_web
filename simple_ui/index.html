@@ -1,0 +1,334 @@
+<html>
+<head>
+  <link href="css/geocoders.css" rel="stylesheet" />
+</head>
+<body class="GUnload();">
+  <form id="directions-form" class="clearFix" onsubmit="return false;" action="get">
+    <label>From:</label>
+    <input type="text" id="from" value="Stanford, CA" onclick="/*simulateKeyPress(101);*/"/>
+    <label>To:</label>
+    <input type="text" id="to" value="Half Moon Bay, CA"/>
+    <input type="submit" onclick="DS_goDirections();" id="go" value="Go!"/>
+  </form>
+  <div>
+    <div id="earth"></div>
+    <div id="map"></div>
+    <div id="route-details"></div>
+    <div id="temp-shortcuts">
+      (may need to click on view once for these to work)<br/>
+      <br/>
+      T - Forward<br/>
+      G - Backward<br/>
+      F - Left<br/>
+      H - Right<br/>
+      <br/>
+      I - Tilt Up<br/>
+      K - Tilt Down<br/>
+      J - Rotate Left<br/>
+      L - Rotate Right<br/>
+      <br/>
+      R - Previous Step in Route<br/>
+      Y - Next Step in Route<br/>
+      <br/>
+      =&gt; - Pick a new destination<br/>
+    </div>
+  </div>
+</body>
+
+<!-- API Key for code.google.com -->
+<script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=AIzaSyCfDRLK9tu-KA7Tt13BeIMEb22QHDGaa6c"></script>
+<style type="text/css">@import "css/index.css";</style>
+<script type="text/javascript" src="plugins/jquery-1.7.1.min.js"></script>
+<script type="text/javascript" src="js/geplugin-helpers.js"></script>
+<script type="text/javascript" src="js/math3d.js"></script>
+<script type="text/javascript" src="js/simulator.js"></script>
+<script type="text/javascript" src="js/index.js"></script>
+
+<!-- Driving Simulator/Directions -->
+<script type="text/javascript">
+// <![CDATA[
+
+var DS_ge;
+var DS_geHelpers;
+var DS_map;
+
+google.load("jquery", "1");
+google.load("maps", "2.x");
+google.load("earth", "1");
+
+function DS_init() {
+  /*** 
+   * Disable the button used to submit requests for driving
+   * directions, until everything is initialized successfully.
+   ***/
+  $('#directions-form input').attr('disabled', 'disabled');
+  
+  google.earth.createInstance(
+    'earth',
+    function(ge) {
+      DS_ge = ge;
+      
+      /***
+       * Hide the navigation controls in the Google Earth window.
+       ***/
+      DS_ge.getNavigationControl().setVisibility(DS_ge.VISIBILITY_HIDE);
+      
+      /***
+       * Show various overlays and 3D objects on the Earth's surface.
+       ***/
+      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BUILDINGS, true);
+      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BORDERS, true);
+      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_ROADS, true);
+      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_TREES, true);
+      
+      /***
+       * Initialize the handle to the Google Earth helper functions.
+       ***/
+      DS_geHelpers = new GEHelpers(DS_ge);
+      
+      /***
+       * Initialize the Google Map for handling driving directions.
+       ***/
+      DS_map = new GMap2($('#map').get(0));
+      
+      /***
+       * Show the Google Earth window.
+       ***/
+      DS_ge.getWindow().setVisibility(true);
+      
+      /*** 
+       * Once everything is initialized successfully, activate the
+       * button used to submit requests for driving directions.
+       ***/ 
+      $('#directions-form input').removeAttr('disabled');
+      
+      // Activate arrow-key powered navigation.
+      DS_activateKeyListeners();
+    },
+    function() {
+      /***
+       * This function will be called if plugin fails to load, in case
+       * we need to handle that error condition.
+       ***/
+    });
+}
+google.setOnLoadCallback(DS_init);
+
+var isDriving = false;
+var KeyCodes = {
+  BACKSPACE:     8,
+  TAB:           9,
+  ENTER:        13,
+  SHIFT:        16,
+  CTRL:         17,
+  ALT:          18,
+  PAUSE_BREAK:  19,
+  CAPS_LOCK:    20,
+  ESCAPE:       27,
+  SPACE:        32, 
+  PAGE_UP:      33,
+  PAGE_DOWN:    34,
+  END:          35,
+  HOME:         36,
+  LEFT_ARROW:   37,
+  UP_ARROW:     38,
+  RIGHT_ARROW:  39,
+  DOWN_ARROW:   40,
+  INSERT:       45,
+  DELETE:       46,
+  DIGIT_0:      48,
+  DIGIT_1:      49,
+  DIGIT_2:      50,
+  DIGIT_3:      51,
+  DIGIT_4:      52,
+  DIGIT_5:      53,
+  DIGIT_6:      54,
+  DIGIT_7:      55,
+  DIGIT_8:      56,
+  DIGIT_9:      57,
+  LETTER_A:     65,
+  LETTER_B:     66,
+  LETTER_C:     67,
+  LETTER_D:     68,
+  LETTER_E:     69,
+  LETTER_F:     70,
+  LETTER_G:     71,
+  LETTER_H:     72,
+  LETTER_I:     73,
+  LETTER_J:     74,
+  LETTER_K:     75,
+  LETTER_L:     76,
+  LETTER_M:     77,
+  LETTER_N:     78,
+  LETTER_O:     79,
+  LETTER_P:     80,
+  LETTER_Q:     81,
+  LETTER_R:     82,
+  LETTER_S:     83,
+  LETTER_T:     84,
+  LETTER_U:     85,
+  LETTER_V:     86,
+  LETTER_W:     87,
+  LETTER_X:     88,
+  LETTER_Y:     89,
+  LETTER_Z:     90,
+  SEMI_COLON:  186,
+  EQUAL_SIGN:  187,
+  COMMA:       188,
+  DASH:        189,
+  PERIOD:      190,
+  FORWARD_SLASH: 191,
+  GRAVE_ACCENT:  192,
+  OPEN_BRACKET:  219,
+  BACK_SLASH:    220,
+  CLOSE_BRACKET: 221,
+  SINGLE_QUOTE:  222
+};
+function DS_activateKeyListeners() {
+  $(document).keyup(function(e) {
+    var keyCode = e.which;
+    console.log('keyup event fired: ' + keyCode);
+    switch (keyCode) {
+      // Start Driving
+      case KeyCodes.SPACE:
+        if (isDriving) {
+          DS_controlSimulator('pause');
+          isDriving = false;
+        } else {
+          DS_controlSimulator('start');
+          isDriving = true;
+        }
+        break;
+      case KeyCodes.DIGIT_1:
+        DS_controlSimulator('slower');
+        break;
+      case KeyCodes.DIGIT_2:
+        DS_controlSimulator('faster');
+        break;
+      
+      // Moving
+      case KeyCodes.LETTER_T:
+        DS_move('forward');
+        break;
+      case KeyCodes.LETTER_F:
+        DS_move('left');
+        break;
+      case KeyCodes.LETTER_G:
+        DS_move('backward');
+        break;
+      case KeyCodes.LETTER_H:
+        DS_move('right');
+        break;
+    
+      // Turning
+      case KeyCodes.LETTER_I:
+        DS_rotateCamera('up');
+        break;
+      case KeyCodes.LETTER_J:
+        DS_rotateCamera('left');
+        break;
+      case KeyCodes.LETTER_K:
+        DS_rotateCamera('down');
+        break;
+      case KeyCodes.LETTER_L:
+        DS_rotateCamera('right');
+        break;
+        
+      // Google Earth View: Cycle Between Steps  
+      case KeyCodes.LETTER_Z:
+        DS_previousStep();
+        break;
+      case KeyCodes.LETTER_X:
+        DS_nextStep();
+        break;
+    }
+  });
+}
+
+$(document).ready(function() {
+  //GA.init();
+});
+
+// ]]>
+</script>
+<!-- END Driving Simulator/Directions -->
+
+<!-- Application Views -->
+<!--<script type="text/javascript">
+var GeocodersApp = GA = {
+  
+  init: function() {
+    GA.Views.init();
+  },
+  
+  Views: {
+    init: function() {
+      this.initView('AppView_Confirm');
+    },
+    initView: function(viewID) {
+      var self = this;
+      
+      // Try to get the desired view.
+      $view = $('#' + viewID);
+      
+      if (!$view) {
+        // Print an error and return if it does not exist in the DOM.
+        console.err('View with ID #' + viewID + ' does not exist');
+        return;
+      } else {
+        // If the view was found, take appropriate action based on the view ID.
+        if (viewID == 'AppView_Confirm') {
+          $view.click(function() {
+            GA.Views.showCenteredMessage(viewID, 'AppView_Confirm_OK', self.showNextView, 750);
+          });
+        }
+      }
+    },
+    showNextView: function(viewID) {
+      //impress().next();
+    },
+    showCenteredMessage: function(viewID, messageID, callbackFunc, callbackDelay) {
+      // Try to get the desired view. Throw an error if it was not found.
+      var $view = $('#' + viewID);
+      if (!$view) {
+        console.err('View with ID #' + viewID + ' does not exist');
+        return;
+      }
+      
+      // Try to get the desired message in the view. Throw an error if it was not found.
+      var $message = $view.find('.appCenteredMessage#' + messageID);
+      if (!$message) {
+        console.err('Message with ID #' + messageID + ' in #' + viewID + ' does not exist');
+        return;
+      }
+      
+      // Return immediately if the desired message is already visible.
+      if ($message.is(':visible')) {
+        return;
+      }
+      
+      // Hide all other messages on this view.
+      $view.find('.appCenteredMessage:visible').fadeOut('fast');
+      
+      // Show the new message with a nice animation.
+      $message.css({'top': '50px', 'opacity': 0.0});
+      $message.show();
+      $message.animate({
+        top: '-=50',
+        opacity: '1'
+      }, function() {
+        // Execute the callback function after the desired delay.
+        if (callbackDelay && callbackDelay > 0) {
+          setTimeout(callbackFunc, callbackDelay);
+        } else {
+          setTimeout(callbackFunc, 0);
+        }
+      });
+    }
+  }  
+};-->
+
+</script>
+<!-- END Application Views -->
+
+<html>
