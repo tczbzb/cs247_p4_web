@@ -291,6 +291,11 @@ DDSimulator.prototype.tick_ = function() {
     this.segmentDistance_ = this.path[this.pathIndex_].distance *
                             Math.min(1.0, this.segmentTime_ / segmentDuration);
     this.currentSpeed = this.path[this.pathIndex_].distance / segmentDuration;
+    
+    // if (DS_currentStep < DS_steps.length - 1) {
+    //   var distanceRemaining = roundNumber(parseFloat(DS_steps[DS_currentStep].distanceHtml) - this.segmentDistance_, 1);
+    //   $('#route-details #dir-step-' + (DS_currentStep + 1) + ' .distance .val').text(distanceRemaining);
+    // }
   } else {
     this.segmentDistance_ = 0.0;
     this.currentSpeed = 0.0;
@@ -315,4 +320,9 @@ DDSimulator.prototype.tick_ = function() {
   // fire the callback if one is provided
   if (this.options.on_tick)
     this.options.on_tick();
+}
+
+function roundNumber(num, dec) {
+	var result = Math.round(num*Math.pow(10,dec)) / Math.pow(10,dec);
+	return result;
 }

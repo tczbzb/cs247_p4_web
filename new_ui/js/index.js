@@ -265,10 +265,13 @@ function DS_buildDirectionsList() {
     var liHTML =
     '<li id="dir-step-' + i + '"' + selectedClass + ' style="left:' + leftPos + 'px">' +
       '<div class="dirStepContent">' +
-        '<div class="description">' + DS_steps[i].desc + '</div>' + 
-        '<div class="distance">' + DS_steps[i].distanceHtml + '</div>' + 
-      '</div>' + 
-    '</li>';
+        '<div class="description">' + DS_steps[i].desc + '</div>';
+    if (i == 0) { 
+        liHTML += '<div class="distance">for <span class="val">' + DS_steps[i].distanceHtml + '</span></div>';
+    } else {
+        liHTML += '<div class="distance">in <span class="val">' + DS_steps[i-1].distanceHtml + '</span></div>';
+    }
+    liHTML += '</div>' + '</li>';
     $('#route-details ol').append($(liHTML));
   }
 
@@ -285,6 +288,10 @@ function DS_buildDirectionsList() {
  * @param {number} stepNum The 0-based step index to fly to
  */
 function DS_flyToStep(stepNum) {
+  // Enforce stepNum bounds.
+  stepNum = Math.max(0, stepNum);
+  stepNum = Math.min(DS_steps.length - 1, stepNum);
+  
   var step = DS_steps[stepNum];
   
   var la = DS_ge.createLookAt('');
@@ -294,15 +301,11 @@ function DS_flyToStep(stepNum) {
       DS_geHelpers.getHeading(step.loc, DS_path[step.pathIndex + 1].loc),
       70, // tilt
       100 // range (inverse of zoom)
-      );
+  );
   DS_ge.getView().setAbstractView(la);
-
-  // show the description balloon.
-  /*var balloon = DS_ge.createFeatureBalloon('');
-  balloon.setFeature(DS_placemarks['step-' + stepNum]);
-  DS_ge.setBalloon(balloon); */
-
+  
   DS_highlightStep(stepNum);
+
   DS_currentStep = stepNum;
 }
 
@@ -312,8 +315,20 @@ function DS_flyToStep(stepNum) {
  *     directions list
  */
 function DS_highlightStep(stepNum) {
-  $('#route-details li').removeClass('sel');
-  $('#route-details #dir-step-' + stepNum).addClass('sel');
+  // Return if we don't need to animate.
+  if (stepNum == DS_currentStep) {
+    return;
+  }
+  
+  // Determine how far to shift the list (negative => shift right, positive => shift left)
+  var new_x = -1440 * (stepNum)
+  
+  // Move the current step to the right, out of view.
+  $('#route-details').animate({
+    left: new_x
+  }, 250, function() {
+    // Animation complete.
+  });
 }
 
 /**
@@ -404,7 +419,8 @@ function DS_controlSimulator(command, opt_cb) {
         // index in DS_path items), highlight that step in the directions
         // list
         on_changeStep: function(stepNum) {
-          DS_highlightStep(stepNum);
+          DS_highlightStep(stepNum + 1);
+          DS_currentStep = stepNum;
         }
       });
       
@@ -482,41 +498,13 @@ function DS_updateSpeedIndicator() {
 
 function DS_nextStep() {
   if (DS_currentStep < DS_steps.length - 1) {
-    for (var i = 0; i < DS_steps.length; i++) {
-      // Move the current step to the right, out of view.
-      $('#route-details #dir-step-' + i).animate({
-        left: '-=1440'
-      }, 1000, function() {
-        // Animation complete.
-      });
-    }
-  
-    // Fly to the next step on the map.
-  	DS_currentStep++;
-  	if (DS_currentStep >= DS_steps.length) {
-  		DS_currentStep = DS_steps.length - 1;
-  	}
-  	DS_flyToStep(DS_currentStep);
+  	DS_flyToStep(DS_currentStep + 1);
   }
 }
 
 function DS_previousStep() {
   if (DS_currentStep > 0) {
-    for (var i = 0; i < DS_steps.length; i++) {
-      // Move the current step to the right, out of view.
-      $('#route-details #dir-step-' + i).animate({
-        left: '+=1440'
-      }, 1000, function() {
-        // Animation complete.
-      });
-    }
-  
-    // Fly to the previous step on the map.
-    DS_currentStep--;
-  	if (DS_currentStep < 0) {
-  		DS_currentStep = 0;
-  	}
-  	DS_flyToStep(DS_currentStep);
+  	DS_flyToStep(DS_currentStep - 1);
   }
 }
 
