@@ -94,6 +94,14 @@
         <Label Canvas.Left="0" Canvas.Top="0" Content="Current Controller:" Height="28" Name="label1" Width="108" />
         <Label Canvas.Left="103" Canvas.Top="0" Content="Example Controller" Height="28" Name="controllerText" Width="140" />
         <TextBlock Canvas.Left="377" Canvas.Top="5" Height="17" Name="textBlock1" Text="(Use keyboard {1, 2, 3} to change controllers)" Width="249" />
-        <WebBrowser Canvas.Left="0" Canvas.Top="0" Height="480" Name="webBrowser1" Width="640"/>
+        <WebBrowser Canvas.Left="-10" Canvas.Top="-22" Height="463" Name="webBrowser1" Width="638"/>
+        <Button Canvas.Left="0" Canvas.Top="457" Content="zoom in" Height="23" Name="button1" Width="56" Click="button1_Click" />
+        <Button Canvas.Left="62" Canvas.Top="457" Content="zoom out" Height="23" Name="button2" Width="62" Click="button2_Click" />
+        <Button Canvas.Left="130" Canvas.Top="457" Content="left" Height="23" Name="button3" Width="75" Click="button3_Click" />
+        <Button Canvas.Left="214" Canvas.Top="457" Content="right" Height="23" Name="button4" Width="75" />
+        <Button Canvas.Left="298" Canvas.Top="457" Content="up" Height="23" Name="button5" Width="75" />
+        <Button Canvas.Left="384" Canvas.Top="457" Content="down" Height="23" Name="button6" Width="75" />
+        <Button Canvas.Left="465" Canvas.Top="457" Content="next" Height="23" Name="button7" Width="75" Click="button7_Click" />
+        <Button Canvas.Left="551" Canvas.Top="457" Content="previous" Height="23" Name="button8" Width="75" Click="button8_Click" />
     </Canvas>
 </Window>

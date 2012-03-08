@@ -223,8 +223,7 @@ function DS_buildPathStepArrays() {
     var stepDistance = step.getDistance().meters;
     for (var j = firstPolylineIndex; j <= lastPolylineIndex; j++) {
       var loc = polyline.getVertex(j);
-      var distance = (j == numPolylineVertices - 1) ?
-                     0 : DS_geHelpers.distance(loc, polyline.getVertex(j + 1));
+      var distance = (j == numPolylineVertices - 1) ? 0 : DS_geHelpers.distance(loc, polyline.getVertex(j + 1));
       
       DS_path.push({
         loc: loc,

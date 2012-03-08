@@ -208,6 +208,31 @@ namespace SkeletalTracking
             }
 
         }
+
+        private void button1_Click(object sender, RoutedEventArgs e)
+        {
+            this.webBrowser1.InvokeScript("DS_zoomIn");
+        }
+
+        private void button2_Click(object sender, RoutedEventArgs e)
+        {
+            this.webBrowser1.InvokeScript("DS_zoomOut");
+        }
+
+        private void button3_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void button7_Click(object sender, RoutedEventArgs e)
+        {
+            this.webBrowser1.InvokeScript("DS_nextStep");
+        }
+
+        private void button8_Click(object sender, RoutedEventArgs e)
+        {
+            this.webBrowser1.InvokeScript("DS_previousStep");
+        }
     }
 
 
