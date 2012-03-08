@@ -79,7 +79,6 @@ function DS_goDirections() {
   
   google.maps.Event.addListener(DS_directions, 'load', function() {
     DS_directionsLoaded();
-    setTimeout("impress().next();", 2000);
   });
   
   google.maps.Event.addListener(DS_directions, 'error', function() {
@@ -185,9 +184,6 @@ function DS_directionsLoaded() {
     DS_simulator.destroy();
     DS_simulator = null;
   }
-  
-  
-  impress().next();
 }
 
 /**
