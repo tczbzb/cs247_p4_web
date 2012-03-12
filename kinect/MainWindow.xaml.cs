@@ -63,7 +63,7 @@ namespace SkeletalTracking
         
         private void InitTargets()
         {
-            targets.Add(1, new Target(target1, 1));
+           /* targets.Add(1, new Target(target1, 1));
             targets.Add(2, new Target(target2, 2));
             targets.Add(3, new Target(target3, 3));
             targets.Add(4, new Target(target4, 4));
@@ -73,7 +73,7 @@ namespace SkeletalTracking
             Canvas.SetZIndex(target2, 100);
             Canvas.SetZIndex(target3, 100);
             Canvas.SetZIndex(target4, 100);
-            Canvas.SetZIndex(target5, 100);
+            Canvas.SetZIndex(target5, 100);*/
         }
 
         private void SetupKinect()
@@ -111,14 +111,14 @@ namespace SkeletalTracking
                 nui.VideoStream.Open(ImageStreamType.Video, 2, ImageResolution.Resolution640x480, ImageType.Color);
                 
                 //Force video to the background
-                Canvas.SetZIndex(image1, -10000);
+              //  Canvas.SetZIndex(image1, -10000);
             }
         }
 
         void nui_VideoFrameReady(object sender, ImageFrameReadyEventArgs e)
         {
             //Automagically create BitmapSource for Video
-            image1.Source = e.ImageFrame.ToBitmapSource();            
+           // image1.Source = e.ImageFrame.ToBitmapSource();            
         }
 
         void nui_SkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
@@ -135,7 +135,7 @@ namespace SkeletalTracking
             if(skeleton != null)
             {
                 //set positions on our joints of interest (already defined as Ellipse objects in the xaml)
-                SetEllipsePosition(headEllipse, skeleton.Joints[JointID.Head]);
+          /*      SetEllipsePosition(headEllipse, skeleton.Joints[JointID.Head]);
                 SetEllipsePosition(leftEllipse, skeleton.Joints[JointID.HandLeft]);
                 SetEllipsePosition(rightEllipse, skeleton.Joints[JointID.HandRight]);
                 SetEllipsePosition(shoulderCenter, skeleton.Joints[JointID.ShoulderCenter]);
@@ -157,7 +157,7 @@ namespace SkeletalTracking
                 SetEllipsePosition(kneeLeft, skeleton.Joints[JointID.KneeLeft]);
                 SetEllipsePosition(kneeRight, skeleton.Joints[JointID.KneeRight]);
                 SetEllipsePosition(hipCenter, skeleton.Joints[JointID.HipCenter]);
-                currentController.processSkeletonFrame(skeleton, targets);
+              */  currentController.processSkeletonFrame(skeleton, targets);
 
             }
         }
@@ -189,21 +189,21 @@ namespace SkeletalTracking
             if (e.Key == Key.D1)
             {
                 currentController = exampleController;
-                controllerText.Content = "Example Controller";
+               // controllerText.Content = "Example Controller";
                 currentController.controllerActivated(targets);
             }
 
             if (e.Key == Key.D2)
             {
                 currentController = yourController1;
-                controllerText.Content = "Controller 1";
+              //  controllerText.Content = "Controller 1";
                 currentController.controllerActivated(targets);
             }
 
             if (e.Key == Key.D3)
             {
                 currentController = yourController2;
-                controllerText.Content = "Controller 2";
+              //  controllerText.Content = "Controller 2";
                 currentController.controllerActivated(targets);
             }
 
