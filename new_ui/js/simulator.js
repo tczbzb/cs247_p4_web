@@ -230,7 +230,7 @@ DDSimulator.prototype.moveToPointDriving_ = function(loc, heading) {
   var desiredHeading = heading;
   
   var curRange = oldLa.getRange();
-  var desiredRange = Math.max(20.0, this.currentSpeed * 10);
+  //var desiredRange = Math.max(20.0, this.currentSpeed * 10);
   
   var la = this.ge.createLookAt('');
   la.set(loc.lat(), loc.lng(),
@@ -238,7 +238,7 @@ DDSimulator.prototype.moveToPointDriving_ = function(loc, heading) {
       this.ge.ALTITUDE_RELATIVE_TO_GROUND,
       curHeading + this.getTurnToDirection_(curHeading, desiredHeading),
       60, // tilt
-      curRange + (desiredRange - curRange) * 0.1 // range (inverse of zoom)
+      200//curRange + (desiredRange - curRange) * 0.1 // range (inverse of zoom)
       );
   this.ge.getView().setAbstractView(la);
 }
@@ -316,6 +316,7 @@ DDSimulator.prototype.tick_ = function() {
   this.drive_(this.currentLoc,
       this.geHelpers_.getHeading(this.path[this.pathIndex_].loc,
                                  this.path[this.pathIndex_ + 1].loc));
+  
   
   // fire the callback if one is provided
   if (this.options.on_tick)
