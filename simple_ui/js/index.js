@@ -62,6 +62,8 @@ var DS_placemarks = {};
 
 var DS_currentStep = 0;
 
+var $DS_currentStepDist = null;
+
 /**
  * The callback for when the 'Go!' button is pressed. This uses the Maps API's
  * Directions class to get the route and pull out the individual route steps
@@ -79,6 +81,7 @@ function DS_goDirections() {
   
   google.maps.Event.addListener(DS_directions, 'load', function() {
     DS_directionsLoaded();
+    setTimeout("GA.Views.showNextView()", 2000);
   });
   
   google.maps.Event.addListener(DS_directions, 'error', function() {
@@ -184,6 +187,8 @@ function DS_directionsLoaded() {
     DS_simulator.destroy();
     DS_simulator = null;
   }
+  
+  GA.Views.showNextView();
 }
 
 /**
@@ -263,9 +268,9 @@ function DS_buildDirectionsList() {
       '<div class="dirStepContent">' +
         '<div class="description">' + DS_steps[i].desc + '</div>';
     if (i == 0) { 
-        liHTML += '<div class="distance">for <span class="val">' + DS_steps[i].distanceHtml + '</span></div>';
+        liHTML += '<div class="distance"><span>for</span> <span class="hidden total">' + parseFloat(DS_steps[i].distanceHtml) + '</span><span class="val">' + parseFloat(DS_steps[i].distanceHtml) + '</span> <span class="unit">' + DS_steps[i].distanceHtml.substring(DS_steps[i].distanceHtml.indexOf('&nbsp;') + 6) + '</span></div>';
     } else {
-        liHTML += '<div class="distance">in <span class="val">' + DS_steps[i-1].distanceHtml + '</span></div>';
+        liHTML += '<div class="distance"><span>in</span> <span class="hidden total">' + parseFloat(DS_steps[i-1].distanceHtml) + '</span><span class="val">' + parseFloat(DS_steps[i-1].distanceHtml) + '</span> <span class="unit">' + DS_steps[i - 1].distanceHtml.substring(DS_steps[i-1].distanceHtml.indexOf('&nbsp;') + 6) + '</span></div>';
     }
     liHTML += '</div>' + '</li>';
     $('#route-details ol').append($(liHTML));
@@ -398,16 +403,28 @@ function DS_controlSimulator(command, opt_cb) {
           DS_mapMarker.setLatLng(DS_simulator.currentLoc);
           
           if (DS_simulator) {
-            $('#status').html(
-                '<strong>Time:</strong> ' +
-                  DS_formatTime(DS_simulator.totalTime) + '<br/>' +
-                '<strong>Distance:</strong> ' +
-                  (Math.round(
-                      DS_simulator.totalDistance / 1609.344 * 10) / 10) +
-                  ' mi' + '<br/>' +
-                '<strong>Current Speed:</strong> ' +
-                  Math.round(DS_simulator.currentSpeed / 0.44704) + 'mph') +
-                  '<br/>';
+            // Update remaining distance until next turn.
+            $value = $('#route-details #dir-step-' + (DS_currentStep + 1) + ' .distance .val');
+            var unit = $value.parent().find('.unit').text();
+            var total = parseFloat($value.parent().find('.total').text());
+            
+            if (unit == 'ft') {
+              var feetLeft = Math.max(0, Math.round(total - Math.round(DS_simulator.totalDistance / 1609.344 * 5280)));
+              if (feetLeft < 200) {
+                $value.closest('.dirStepContent').addClass('urgent');
+                $value.html('COMING UP!');
+              } else {
+                $value.html(feetLeft);
+              }
+            } else if (unit == 'mi') {
+              var milesLeft = Math.max(0, roundNumber(total - (Math.round(DS_simulator.totalDistance / 1609.344 * 10) / 10), 1));
+              if (milesLeft <= 0.1) {
+                $value.closest('.dirStepContent').addClass('urgent');
+                $value.html('COMING UP!');
+              } else {
+                $value.html(milesLeft);
+              }
+            }
           }
         },
         
@@ -415,10 +432,14 @@ function DS_controlSimulator(command, opt_cb) {
         // index in DS_path items), highlight that step in the directions
         // list
         on_changeStep: function(stepNum) {
+          DS_simulator.beforeSegmentDistance_ = 0;
           DS_highlightStep(stepNum + 1);
           DS_currentStep = stepNum;
+          $DS_currentStepDist = $('#route-details #dir-step-' + (DS_currentStep + 1) + ' .distance .val');
         }
       });
+      
+      $DS_currentStepDist = $('#route-details #dir-step-' + (DS_currentStep + 1) + ' .distance .val');
       
       if (!DS_mapMarker) {
         // create vehicle location indicator on map
@@ -527,20 +548,35 @@ function DS_zoomIn() {
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
 	// Zoom in to half the current range.
 	lookAt.setRange(lookAt.getRange() / 2.0);
+	
+	// Stay centered on the current step or current car location.
+	if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+	  lookAt.setLatitude(DS_simulator.currentLoc.lat());
+	  lookAt.setLongitude(DS_simulator.currentLoc.lng());
+  } else {
+    lookAt.setLatitude(DS_steps[DS_currentStep].loc.lat());
+	  lookAt.setLongitude(DS_steps[DS_currentStep].loc.lng());
+  }
+  
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 	zoomInSwitch();
 }
-
 function DS_zoomOut() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
 	if (lookAt.getTilt() > 0) {
 		lookAt.setTilt(0);
 		lookAt.setRange(100);
-		var step = DS_steps[DS_currentStep];
-		lookAt.setLatitude(step.loc.lat());
-		lookAt.setLongitude(step.loc.lng());
+		
+		// Stay centered on the current step or current car location.
+		if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+  	  lookAt.setLatitude(DS_simulator.currentLoc.lat());
+  	  lookAt.setLongitude(DS_simulator.currentLoc.lng());
+    } else {
+      lookAt.setLatitude(DS_steps[DS_currentStep].loc.lat());
+  	  lookAt.setLongitude(DS_steps[DS_currentStep].loc.lng());
+    }
 	}
 	// Zoom out to twice the current range.
 	lookAt.setRange(lookAt.getRange() * 2.0);
@@ -551,6 +587,7 @@ function DS_zoomOut() {
 // Driving Controls
 var DS_stepDistanceInMeters = 500;
 var DS_stepRotationInDegrees = 15;
+
 function DS_move(direction) {
   // Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
@@ -598,6 +635,19 @@ function DS_move(direction) {
 	lookAt.setAltitude(DS_ge.getGlobe().getGroundAltitude(localAnchorLla[0], localAnchorLla[1]));
 	DS_ge.getView().setAbstractView(lookAt);
 }
+function DS_moveUp() {
+  DS_move('forward');
+}
+function DS_moveDown() {
+  DS_move('backward');
+}
+function DS_moveRight() {
+  DS_move('right');
+}
+function DS_moveLeft() {
+  DS_move('left');
+}
+
 function DS_rotateCamera(direction) {
   // Get the current camera view.
 	var camera = DS_ge.getView().copyAsCamera(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
@@ -620,4 +670,21 @@ function DS_rotateCamera(direction) {
   
   // Update the camera view in Google Earth.
 	DS_ge.getView().setAbstractView(camera);
+}
+function DS_turnUp() {
+  DS_rotateCamera('up');
+}
+function DS_turnDown() {
+  DS_rotateCamera('down');
+}
+function DS_turnLeft() {
+  DS_rotateCamera('left');
+}
+function DS_turnRight() {
+  DS_rotateCamera('right');
+}
+
+function roundNumber(num, dec) {
+	var result = Math.round(num*Math.pow(10,dec))/Math.pow(10,dec);
+	return result;
 }

@@ -196,18 +196,6 @@ V3 = {
     var angle = Math.acos(dot);
     var dist = V3.EARTH_RADIUS * angle;
     return dist;
-  },
-  latLngDistance: function(a, b) {
-    var dLat = (b[0]-a[0]) * Math.PI / 180;
-    var dLon = (b[1]-a[1]) * Math.PI / 180;
-    var lat1 = a[0] * Math.PI / 180;
-    var lat2 = b[0] * Math.PI / 180;
-
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    var d = V3.EARTH_RADIUS * c;
-    return d;
   }
 };
 

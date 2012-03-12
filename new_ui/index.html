@@ -322,8 +322,18 @@ var GeocodersApp = GA = {
         }
       }
     },
-    showNextView: function(viewID) {
+    showPreviousView: function() {
+      //impress().next();
+      //if (GA.views.currentView <= 0) return;
+      impress().prev();
+      //GA.Views.currentView -= 1;
+      //GA.Views.currentViewID = $('#AppViews .step')[GA.Views.currentView].id;
+    },
+    showNextView: function() {
       impress().next();
+      //$('body').animate({scrollLeft: GA.Views.VIEW_WIDTH * (GA.Views.currentView + 1)}, 500);
+      //GA.Views.currentView += 1;
+      //GA.Views.currentViewID = $('#AppViews .step')[GA.Views.currentView].id;
     },
     showCenteredMessage: function(viewID, messageID, callbackFunc, callbackDelay) {
       // Try to get the desired view. Throw an error if it was not found.

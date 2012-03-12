@@ -1,48 +1,83 @@
 <html>
 <head>
+  <!-- API Key for code.google.com -->
+  <script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=AIzaSyCfDRLK9tu-KA7Tt13BeIMEb22QHDGaa6c"></script>
+  <style type="text/css">@import "css/index.css";</style>
+  <script type="text/javascript" src="plugins/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="js/geplugin-helpers.js"></script>
+  <script type="text/javascript" src="js/math3d.js"></script>
+  <script type="text/javascript" src="js/simulator.js"></script>
+  <script type="text/javascript" src="js/index.js"></script>
+  <!--<script type="text/javascript" src="plugins/impress-js/js/impress.js"></script>
+  <script>impress();</script>-->
+
   <link href="css/geocoders.css" rel="stylesheet" />
 </head>
 <body class="GUnload();">
-  <form id="directions-form" class="clearFix" onsubmit="return false;" action="get">
-    <label>From:</label>
-    <input type="text" id="from" value="Stanford, CA" onclick="/*simulateKeyPress(101);*/"/>
-    <label>To:</label>
-    <input type="text" id="to" value="Half Moon Bay, CA"/>
-    <input type="submit" onclick="DS_goDirections();" id="go" value="Go!"/>
-  </form>
-  <div>
-    <div id="earth"></div>
-    <div id="map"></div>
-    <div id="route-details"></div>
-    <div id="temp-shortcuts">
-      (may need to click on view once for these to work)<br/>
-      <br/>
-      T - Forward<br/>
-      G - Backward<br/>
-      F - Left<br/>
-      H - Right<br/>
-      <br/>
-      I - Tilt Up<br/>
-      K - Tilt Down<br/>
-      J - Rotate Left<br/>
-      L - Rotate Right<br/>
-      <br/>
-      R - Previous Step in Route<br/>
-      Y - Next Step in Route<br/>
-      <br/>
-      =&gt; - Pick a new destination<br/>
+  <div id="AppViews">
+    <div id="AppView_Logo" class="step" data-x="0" data-y="-1500" data-rotate-y="-180">
+      <img src="images/geocoders-logo.png" style="position:absolute; left: 720px; margin-left: -136px; top: 400px; margin-top: -144px;"/>
+    </div>
+    <div id="AppView_Input" class="step appView" data-x="0" data-y="0">
+      <div class="appCenteredMessage" style="padding-top: 150px;">
+        <img src="images/speech-bubble.gif" />
+        <h1>Speak your destination to begin</h1>
+        <h2>Go ahead, I'm listening!</h2>
+      </div>
+    </div>
+    <div id="AppView_Confirm" class="step appView" data-x="1490" data-y="0">
+      <div class="appCenteredMessage">
+        <h2>I heard</h2>
+        <h1 class="location">"half moon bay"</h1>
+        <h2>Is this correct?</h2>
+      </div>
+      <div id="AppView_Confirm_OK" class="appCenteredMessage" style="display: none;">
+        <img src="images/checkmark.png" />
+        <h1>Destination Confirmed!</h1>
+      </div>
+    </div>
+    <div id="AppView_Temp" class="step appView" data-x="2980" data-y="0">
+      <form id="directions-form" onsubmit="return false;" action="get">
+        From:<br/>
+        <input type="text" id="from" value="Stanford, CA" onclick="simulateKeyPress(101);"/><br/>
+        To:<br/>
+        <input type="text" id="to" value="Half Moon Bay, CA"/><br/>
+        <input type="submit" onclick="DS_goDirections();" id="go" value="Go!" onclick="GA.Views.showNextView();"/>
+      </form>
+    </div>
+    <div id="AppView_Fetching" class="step appView" data-x="4470" data-y="0">
+      <div class="appCenteredMessage">
+        <img src="images/globe.gif" />
+        <h1>Calculating route...</h1>
+      </div>
+    </div>
+    <div id="AppView_Earth" class="step appView earthView" data-x="5960" data-y="0">
+      <div id="earth"></div>
+      <div id="map"></div>
+      <div id="route-details"></div>
+      <div id="temp-shortcuts">
+        (may need to click on view once for these to work)<br/>
+        <br/>
+        T - Forward<br/>
+        G - Backward<br/>
+        F - Left<br/>
+        H - Right<br/>
+        <br/>
+        I - Tilt Up<br/>
+        K - Tilt Down<br/>
+        J - Rotate Left<br/>
+        L - Rotate Right<br/>
+        <br/>
+        Z - Previous Step in Route<br/>
+        X - Next Step in Route<br/>
+        <br/>
+        SPACE - Start/Stop Driving<br/>
+        <br/>
+        =&gt; - Pick a new destination<br/>
+      </div>
     </div>
   </div>
 </body>
-
-<!-- API Key for code.google.com -->
-<script type="text/javascript" src="http://www.google.com/jsapi?hl=en&key=AIzaSyCfDRLK9tu-KA7Tt13BeIMEb22QHDGaa6c"></script>
-<style type="text/css">@import "css/index.css";</style>
-<script type="text/javascript" src="plugins/jquery-1.7.1.min.js"></script>
-<script type="text/javascript" src="js/geplugin-helpers.js"></script>
-<script type="text/javascript" src="js/math3d.js"></script>
-<script type="text/javascript" src="js/simulator.js"></script>
-<script type="text/javascript" src="js/index.js"></script>
 
 <!-- Driving Simulator/Directions -->
 <script type="text/javascript">
@@ -104,6 +139,8 @@ function DS_init() {
       
       // Activate arrow-key powered navigation.
       DS_activateKeyListeners();
+      
+      DS_ge.getWindow().focus();
     },
     function() {
       /***
@@ -187,8 +224,16 @@ var KeyCodes = {
 function DS_activateKeyListeners() {
   $(document).keyup(function(e) {
     var keyCode = e.which;
-    console.log('keyup event fired: ' + keyCode);
     switch (keyCode) {
+      // Views
+      case KeyCodes.COMMA:
+        GA.Views.showPreviousView();
+        break;
+      case KeyCodes.PERIOD:
+        GA.Views.showNextView();
+        break;
+      
+      
       // Start Driving
       case KeyCodes.SPACE:
         if (isDriving) {
@@ -246,7 +291,15 @@ function DS_activateKeyListeners() {
 }
 
 $(document).ready(function() {
-  //GA.init();
+  $.easing.elasout = function(x, t, b, c, d) {
+  	var s=1.70158;var p=0;var a=c;
+		if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+		if (a < Math.abs(c)) { a=c; var s=p/4; }
+		else var s = p/(2*Math.PI) * Math.asin (c/a);
+		return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
+  };
+  
+  GA.init();
 });
 
 // ]]>
@@ -254,15 +307,16 @@ $(document).ready(function() {
 <!-- END Driving Simulator/Directions -->
 
 <!-- Application Views -->
-<!--<script type="text/javascript">
+<script type="text/javascript">
 var GeocodersApp = GA = {
   
-  init: function() {
-    GA.Views.init();
-  },
-  
   Views: {
+    VIEW_WIDTH: 1490,
+    currentView: 0,
+    currentViewID: '',
+    
     init: function() {
+      currentViewID = $('#AppViews .step').first().attr('id');
       this.initView('AppView_Confirm');
     },
     initView: function(viewID) {
@@ -279,13 +333,23 @@ var GeocodersApp = GA = {
         // If the view was found, take appropriate action based on the view ID.
         if (viewID == 'AppView_Confirm') {
           $view.click(function() {
-            GA.Views.showCenteredMessage(viewID, 'AppView_Confirm_OK', self.showNextView, 750);
+            GA.Views.showCenteredMessage(viewID, 'AppView_Confirm_OK', GA.Views.showNextView, 750);
           });
         }
       }
     },
-    showNextView: function(viewID) {
+    showPreviousView: function() {
       //impress().next();
+      if (GA.views.currentView <= 0) return;
+      $('body').animate({scrollLeft: GA.Views.VIEW_WIDTH * (GA.Views.currentView - 1)}, 500);
+      GA.Views.currentView -= 1;
+      GA.Views.currentViewID = $('#AppViews .step')[GA.Views.currentView].id;
+    },
+    showNextView: function() {
+      //impress().next();
+      $('body').animate({scrollLeft: GA.Views.VIEW_WIDTH * (GA.Views.currentView + 1)}, 500);
+      GA.Views.currentView += 1;
+      GA.Views.currentViewID = $('#AppViews .step')[GA.Views.currentView].id;
     },
     showCenteredMessage: function(viewID, messageID, callbackFunc, callbackDelay) {
       // Try to get the desired view. Throw an error if it was not found.
@@ -325,8 +389,13 @@ var GeocodersApp = GA = {
         }
       });
     }
-  }  
-};-->
+  },
+  
+  
+  init: function() {
+    GA.Views.init();
+  }
+};
 
 </script>
 <!-- END Application Views -->

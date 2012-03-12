@@ -13,7 +13,6 @@ body {
   font-family: 'PT Sans', sans-serif;
   font-size: 15px;
   min-height: 740px;
-  /*pointer-events: none;*/
   -webkit-font-smoothing: antialiased;
 }
 body input,
@@ -21,36 +20,33 @@ body button {
   font-size: 15px;
   margin-top: 8px;
 }
-#impress { pointer-events: auto; }
+#AppViews {
+  height: 100%;
+  width: 8940px;
+}
 
 /* Helper Classes */
-.clearFix:after {
-	content: ".";
-	display: block;
-	clear: both;
-	visibility: hidden;
-	line-height: 0;
-	height: 0;
-}
 .hidden {
   display: none;
 }
 
 /* App Steps */
 .step {
-  width: 1440px;
-
   -webkit-box-sizing: border-box;
   -moz-box-sizing:    border-box;
   -ms-box-sizing:     border-box;
   -o-box-sizing:      border-box;
   box-sizing:         border-box;
-
+  
+  float: left;
   font-family: 'PT Serif', georgia, serif;
-
   font-size: 48px;
+  height: 100%;
   line-height: 1.5;
+  margin-right: 50px;
+  position: relative;
   text-align: center;
+  width: 1440px;
 }
 .step {
     /* fade out inactive slides */
@@ -59,9 +55,6 @@ body button {
   -ms-transition:     opacity 1s;
   -o-transition:      opacity 1s;
   transition:         opacity 1s;
-}
-.step:not(.active) {
-  opacity: 0.0;
 }
 
 /* AppView */
@@ -90,17 +83,20 @@ body button {
   height: 800px;
   line-height: 36px;
   overflow: hidden;
+  position: relative;
   width: 1440px;
 }
 .appView .appCenteredMessage {
   /*background: white;*/
   bottom: 0;
+  height: 100%;
   left: 0;
   padding-top: 200px;
   position: absolute;
   right: 0;
   top: 0;
   text-align: center;
+  width: 100%;
 }
 .appView .appCenteredMessage img {
   margin-bottom: 20px;
@@ -209,18 +205,8 @@ body button {
 }
 
 /* Temporary */
-#directions-form * {
-  display: inline-block;
-  float: left;
-  height: 30px;
-  line-height: 30px;
-  margin: 0 10px 0 5px;
-}
-#directions-form label {
-  color: white;
-}
-#directions-form input[type="submit"] {
-  margin-top: 7px;
+#directions-form {
+  margin-top: 250px;
 }
 #temp-shortcuts {
   background: black;
@@ -229,7 +215,6 @@ body button {
   box-shadow: 1px 1px 1px black;
   -webkit-box-shadow: 1px 1px 1px black;
   -moz-box-shadow: 1px 1px 1px black;
-  display: none;
   color: white;
   font-size: 13px;
   font-weight: bold;
@@ -242,4 +227,15 @@ body button {
   top: 0;
   width: 200px;
   z-index: 2;
+}
+
+#route-details li .dirStepContent.urgent {
+  background: yellow;
+  color: black;
+}
+#route-details li .dirStepContent.urgent .distance span {
+  display: none;
+}
+#route-details li .dirStepContent.urgent .distance .val {
+  display: inline;
 }

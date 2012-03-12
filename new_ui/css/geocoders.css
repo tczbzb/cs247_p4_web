@@ -224,3 +224,14 @@ body button {
   width: 200px;
   z-index: 2;
 }
+
+#route-details li .dirStepContent.urgent {
+  background: yellow;
+  color: black;
+}
+#route-details li .dirStepContent.urgent .distance span {
+  display: none;
+}
+#route-details li .dirStepContent.urgent .distance .val {
+  display: inline;
+}
