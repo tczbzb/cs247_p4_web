@@ -12,6 +12,224 @@
   <script>impress();</script>-->
 
   <link href="css/geocoders.css" rel="stylesheet" />
+  
+  <!-- Driving Simulator/Directions -->
+  <script type="text/javascript">
+  // <![CDATA[
+
+  var DS_ge;
+  var DS_geHelpers;
+  var DS_map;
+
+  google.load("jquery", "1");
+  google.load("maps", "2.x");
+  google.load("earth", "1");
+
+  function DS_init() {
+    /*** 
+     * Disable the button used to submit requests for driving
+     * directions, until everything is initialized successfully.
+     ***/
+    $('#directions-form input').attr('disabled', 'disabled');
+
+    google.earth.createInstance(
+      'earth',
+      function(ge) {
+        DS_ge = ge;
+
+        /***
+         * Hide the navigation controls in the Google Earth window.
+         ***/
+        DS_ge.getNavigationControl().setVisibility(DS_ge.VISIBILITY_HIDE);
+
+        /***
+         * Show various overlays and 3D objects on the Earth's surface.
+         ***/
+        DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BUILDINGS, true);
+        DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BORDERS, true);
+        DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_ROADS, true);
+        DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_TREES, true);
+
+        /***
+         * Initialize the handle to the Google Earth helper functions.
+         ***/
+        DS_geHelpers = new GEHelpers(DS_ge);
+
+        /***
+         * Initialize the Google Map for handling driving directions.
+         ***/
+        DS_map = new GMap2($('#map').get(0));
+
+        /***
+         * Show the Google Earth window.
+         ***/
+        DS_ge.getWindow().setVisibility(true);
+
+        /*** 
+         * Once everything is initialized successfully, activate the
+         * button used to submit requests for driving directions.
+         ***/ 
+        $('#directions-form input').removeAttr('disabled');
+
+        // Activate arrow-key powered navigation.
+        DS_activateKeyListeners();
+
+        DS_ge.getWindow().focus();
+      },
+      function() {
+        /***
+         * This function will be called if plugin fails to load, in case
+         * we need to handle that error condition.
+         ***/
+      });
+  }
+  google.setOnLoadCallback(DS_init);
+
+  var isDriving = false;
+  var KeyCodes = {
+    BACKSPACE:     8,
+    TAB:           9,
+    ENTER:        13,
+    SHIFT:        16,
+    CTRL:         17,
+    ALT:          18,
+    PAUSE_BREAK:  19,
+    CAPS_LOCK:    20,
+    ESCAPE:       27,
+    SPACE:        32, 
+    PAGE_UP:      33,
+    PAGE_DOWN:    34,
+    END:          35,
+    HOME:         36,
+    LEFT_ARROW:   37,
+    UP_ARROW:     38,
+    RIGHT_ARROW:  39,
+    DOWN_ARROW:   40,
+    INSERT:       45,
+    DELETE:       46,
+    DIGIT_0:      48,
+    DIGIT_1:      49,
+    DIGIT_2:      50,
+    DIGIT_3:      51,
+    DIGIT_4:      52,
+    DIGIT_5:      53,
+    DIGIT_6:      54,
+    DIGIT_7:      55,
+    DIGIT_8:      56,
+    DIGIT_9:      57,
+    LETTER_A:     65,
+    LETTER_B:     66,
+    LETTER_C:     67,
+    LETTER_D:     68,
+    LETTER_E:     69,
+    LETTER_F:     70,
+    LETTER_G:     71,
+    LETTER_H:     72,
+    LETTER_I:     73,
+    LETTER_J:     74,
+    LETTER_K:     75,
+    LETTER_L:     76,
+    LETTER_M:     77,
+    LETTER_N:     78,
+    LETTER_O:     79,
+    LETTER_P:     80,
+    LETTER_Q:     81,
+    LETTER_R:     82,
+    LETTER_S:     83,
+    LETTER_T:     84,
+    LETTER_U:     85,
+    LETTER_V:     86,
+    LETTER_W:     87,
+    LETTER_X:     88,
+    LETTER_Y:     89,
+    LETTER_Z:     90,
+    SEMI_COLON:  186,
+    EQUAL_SIGN:  187,
+    COMMA:       188,
+    DASH:        189,
+    PERIOD:      190,
+    FORWARD_SLASH: 191,
+    GRAVE_ACCENT:  192,
+    OPEN_BRACKET:  219,
+    BACK_SLASH:    220,
+    CLOSE_BRACKET: 221,
+    SINGLE_QUOTE:  222
+  };
+  function DS_activateKeyListeners() {
+    $(document).keyup(function(e) {
+      var keyCode = e.which;
+      switch (keyCode) {
+        // Views
+        case KeyCodes.COMMA:
+          GA.Views.showPreviousView();
+          break;
+        case KeyCodes.PERIOD:
+          GA.Views.showNextView();
+          break;
+
+        // Start Driving
+        case KeyCodes.LETTER_C:
+          if (isDriving) {
+            DS_controlSimulator('pause');
+            isDriving = false;
+          } else {
+            DS_controlSimulator('start');
+            isDriving = true;
+          }
+          break;
+        case KeyCodes.DIGIT_1:
+          DS_controlSimulator('slower');
+          break;
+        case KeyCodes.DIGIT_2:
+          DS_controlSimulator('faster');
+          break;
+
+        // Moving
+        case KeyCodes.LETTER_T:
+          DS_move('forward');
+          break;
+        case KeyCodes.LETTER_F:
+          DS_move('left');
+          break;
+        case KeyCodes.LETTER_G:
+          DS_move('backward');
+          break;
+        case KeyCodes.LETTER_H:
+          DS_move('right');
+          break;
+
+        // Turning
+        case KeyCodes.LETTER_I:
+          DS_rotateCamera('up');
+          break;
+        case KeyCodes.LETTER_J:
+          DS_rotateCamera('left');
+          break;
+        case KeyCodes.LETTER_K:
+          DS_rotateCamera('down');
+          break;
+        case KeyCodes.LETTER_L:
+          DS_rotateCamera('right');
+          break;
+
+        // Google Earth View: Cycle Between Steps  
+        case KeyCodes.LETTER_Z:
+          DS_previousStep();
+          break;
+        case KeyCodes.LETTER_X:
+          DS_nextStep();
+          break;
+      }
+    });
+  }
+
+  $(document).ready(function() {
+    GA.init();
+  });
+
+  // ]]>
+  </script>
+  <!-- END Driving Simulator/Directions -->
 </head>
 <body class="GUnload();">
   <div id="AppViews">
@@ -52,7 +270,7 @@
       </div>
     </div>
     <div id="AppView_Earth" class="step appView earthView" data-x="5960" data-y="0">
-      <div id="earth"></div>
+      <div id="earth" style="height: 650px;"></div>
       <div id="map"></div>
       <div id="route-details"></div>
       <div id="temp-shortcuts">
@@ -78,233 +296,6 @@
     </div>
   </div>
 </body>
-
-<!-- Driving Simulator/Directions -->
-<script type="text/javascript">
-// <![CDATA[
-
-var DS_ge;
-var DS_geHelpers;
-var DS_map;
-
-google.load("jquery", "1");
-google.load("maps", "2.x");
-google.load("earth", "1");
-
-function DS_init() {
-  /*** 
-   * Disable the button used to submit requests for driving
-   * directions, until everything is initialized successfully.
-   ***/
-  $('#directions-form input').attr('disabled', 'disabled');
-  
-  google.earth.createInstance(
-    'earth',
-    function(ge) {
-      DS_ge = ge;
-      
-      /***
-       * Hide the navigation controls in the Google Earth window.
-       ***/
-      DS_ge.getNavigationControl().setVisibility(DS_ge.VISIBILITY_HIDE);
-      
-      /***
-       * Show various overlays and 3D objects on the Earth's surface.
-       ***/
-      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BUILDINGS, true);
-      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_BORDERS, true);
-      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_ROADS, true);
-      DS_ge.getLayerRoot().enableLayerById(DS_ge.LAYER_TREES, true);
-      
-      /***
-       * Initialize the handle to the Google Earth helper functions.
-       ***/
-      DS_geHelpers = new GEHelpers(DS_ge);
-      
-      /***
-       * Initialize the Google Map for handling driving directions.
-       ***/
-      DS_map = new GMap2($('#map').get(0));
-      
-      /***
-       * Show the Google Earth window.
-       ***/
-      DS_ge.getWindow().setVisibility(true);
-      
-      /*** 
-       * Once everything is initialized successfully, activate the
-       * button used to submit requests for driving directions.
-       ***/ 
-      $('#directions-form input').removeAttr('disabled');
-      
-      // Activate arrow-key powered navigation.
-      DS_activateKeyListeners();
-      
-      DS_ge.getWindow().focus();
-    },
-    function() {
-      /***
-       * This function will be called if plugin fails to load, in case
-       * we need to handle that error condition.
-       ***/
-    });
-}
-google.setOnLoadCallback(DS_init);
-
-var isDriving = false;
-var KeyCodes = {
-  BACKSPACE:     8,
-  TAB:           9,
-  ENTER:        13,
-  SHIFT:        16,
-  CTRL:         17,
-  ALT:          18,
-  PAUSE_BREAK:  19,
-  CAPS_LOCK:    20,
-  ESCAPE:       27,
-  SPACE:        32, 
-  PAGE_UP:      33,
-  PAGE_DOWN:    34,
-  END:          35,
-  HOME:         36,
-  LEFT_ARROW:   37,
-  UP_ARROW:     38,
-  RIGHT_ARROW:  39,
-  DOWN_ARROW:   40,
-  INSERT:       45,
-  DELETE:       46,
-  DIGIT_0:      48,
-  DIGIT_1:      49,
-  DIGIT_2:      50,
-  DIGIT_3:      51,
-  DIGIT_4:      52,
-  DIGIT_5:      53,
-  DIGIT_6:      54,
-  DIGIT_7:      55,
-  DIGIT_8:      56,
-  DIGIT_9:      57,
-  LETTER_A:     65,
-  LETTER_B:     66,
-  LETTER_C:     67,
-  LETTER_D:     68,
-  LETTER_E:     69,
-  LETTER_F:     70,
-  LETTER_G:     71,
-  LETTER_H:     72,
-  LETTER_I:     73,
-  LETTER_J:     74,
-  LETTER_K:     75,
-  LETTER_L:     76,
-  LETTER_M:     77,
-  LETTER_N:     78,
-  LETTER_O:     79,
-  LETTER_P:     80,
-  LETTER_Q:     81,
-  LETTER_R:     82,
-  LETTER_S:     83,
-  LETTER_T:     84,
-  LETTER_U:     85,
-  LETTER_V:     86,
-  LETTER_W:     87,
-  LETTER_X:     88,
-  LETTER_Y:     89,
-  LETTER_Z:     90,
-  SEMI_COLON:  186,
-  EQUAL_SIGN:  187,
-  COMMA:       188,
-  DASH:        189,
-  PERIOD:      190,
-  FORWARD_SLASH: 191,
-  GRAVE_ACCENT:  192,
-  OPEN_BRACKET:  219,
-  BACK_SLASH:    220,
-  CLOSE_BRACKET: 221,
-  SINGLE_QUOTE:  222
-};
-function DS_activateKeyListeners() {
-  $(document).keyup(function(e) {
-    var keyCode = e.which;
-    switch (keyCode) {
-      // Views
-      case KeyCodes.COMMA:
-        GA.Views.showPreviousView();
-        break;
-      case KeyCodes.PERIOD:
-        GA.Views.showNextView();
-        break;
-      
-      
-      // Start Driving
-      case KeyCodes.SPACE:
-        if (isDriving) {
-          DS_controlSimulator('pause');
-          isDriving = false;
-        } else {
-          DS_controlSimulator('start');
-          isDriving = true;
-        }
-        break;
-      case KeyCodes.DIGIT_1:
-        DS_controlSimulator('slower');
-        break;
-      case KeyCodes.DIGIT_2:
-        DS_controlSimulator('faster');
-        break;
-      
-      // Moving
-      case KeyCodes.LETTER_T:
-        DS_move('forward');
-        break;
-      case KeyCodes.LETTER_F:
-        DS_move('left');
-        break;
-      case KeyCodes.LETTER_G:
-        DS_move('backward');
-        break;
-      case KeyCodes.LETTER_H:
-        DS_move('right');
-        break;
-    
-      // Turning
-      case KeyCodes.LETTER_I:
-        DS_rotateCamera('up');
-        break;
-      case KeyCodes.LETTER_J:
-        DS_rotateCamera('left');
-        break;
-      case KeyCodes.LETTER_K:
-        DS_rotateCamera('down');
-        break;
-      case KeyCodes.LETTER_L:
-        DS_rotateCamera('right');
-        break;
-        
-      // Google Earth View: Cycle Between Steps  
-      case KeyCodes.LETTER_Z:
-        DS_previousStep();
-        break;
-      case KeyCodes.LETTER_X:
-        DS_nextStep();
-        break;
-    }
-  });
-}
-
-$(document).ready(function() {
-  $.easing.elasout = function(x, t, b, c, d) {
-  	var s=1.70158;var p=0;var a=c;
-		if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
-		if (a < Math.abs(c)) { a=c; var s=p/4; }
-		else var s = p/(2*Math.PI) * Math.asin (c/a);
-		return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
-  };
-  
-  GA.init();
-});
-
-// ]]>
-</script>
-<!-- END Driving Simulator/Directions -->
 
 <!-- Application Views -->
 <script type="text/javascript">
