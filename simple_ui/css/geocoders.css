@@ -213,6 +213,7 @@ body button {
   border-right: 1px solid #444;
   border-bottom: 1px solid #444;
   box-shadow: 1px 1px 1px black;
+  display: none;
   -webkit-box-shadow: 1px 1px 1px black;
   -moz-box-shadow: 1px 1px 1px black;
   color: white;

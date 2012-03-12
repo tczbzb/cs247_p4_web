@@ -212,6 +212,7 @@ body button {
   -webkit-box-shadow: 1px 1px 1px black;
   -moz-box-shadow: 1px 1px 1px black;
   color: white;
+  display: none;
   font-size: 13px;
   font-weight: bold;
   left: 0;
