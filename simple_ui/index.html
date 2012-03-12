@@ -340,7 +340,7 @@ var GeocodersApp = GA = {
     },
     showPreviousView: function() {
       //impress().next();
-      if (GA.views.currentView <= 0) return;
+      if (GA.Views.currentView <= 0) return;
       $('body').animate({scrollLeft: GA.Views.VIEW_WIDTH * (GA.Views.currentView - 1)}, 500);
       GA.Views.currentView -= 1;
       GA.Views.currentViewID = $('#AppViews .step')[GA.Views.currentView].id;
@@ -390,7 +390,6 @@ var GeocodersApp = GA = {
       });
     }
   },
-  
   
   init: function() {
     GA.Views.init();
