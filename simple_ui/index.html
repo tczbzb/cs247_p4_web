@@ -212,6 +212,14 @@
           DS_rotateCamera('right');
           break;
 
+        // Zooming
+        case KeyCodes.DIGIT_9:
+          DS_zoomIn();
+          break;
+        case KeyCodes.DIGIT_0:
+          DS_zoomOut();
+          break;
+        
         // Google Earth View: Cycle Between Steps  
         case KeyCodes.LETTER_Z:
           DS_previousStep();
