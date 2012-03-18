@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+		<title>Air hockey (by Rinesh Thomas)</title>
+
+		<!-- libraries -->
+		<script type="text/javascript" src="js/prototype-1.6.0.2.js"></script>
+		<script type="text/javascript" src="js/box2d.js"></script>
+		<script type="text/javascript" src="js/iscroll.js"></script>
+		<script type="text/javascript" src="js/Three.js"></script>
+		<script type="text/javascript" src="js/RequestAnimationFrame.js"></script>
+		
+		<script type="text/javascript" src="../../../kinect.js"></script>
+		
+		<!-- game code -->
+		<script type="text/javascript" src="js/game/game.js"></script>
+		<script type="text/javascript" src="js/game/ai.js"></script>
+		<script type="text/javascript" src="js/game/motion.js"></script>
+		<script type="text/javascript" src="js/game/renderer.js"></script>
+		<script type="text/javascript" src="js/game/physics.js"></script>
+		<script type="text/javascript" src="js/game/ui.js"></script>
+		<script type="text/javascript" src="js/game/state.js"></script>
+
+		<script type="text/javascript" src="js/game/main.js"></script>
+		
+<script type="text/javascript">
+(function( doc, win ) {
+	document.addEventListener('DOMContentLoaded', function(){
+		GAME.init();
+	}, false);
+})( document, window );
+
+var UI = CONTENT.UI;
+
+</script>
+
+<link rel="stylesheet" type="text/css" href="css/game.css" media="screen" />
+
+<body>
+	<div id="_ui">
+		<div id="_hub">
+		
+			<h1 id="title">AIR HOCKEY</h1>
+			
+			<!-- default menu -->
+			<ul id="_menu" class="act">
+				<li onclick="GAME.state.startGame()" id="buttonStart">START</li>
+				<li onclick="UI.showMenu('_options', this)" id="buttonOptions">OPTIONS</li>
+				<li onclick="UI.showMenu('_about', this)" id="buttonAbout">ABOUT</li>
+			</ul>
+			
+			<!-- options page -->
+			<div id="_options">
+			
+				<ul class="half">
+					<li id="buttonMirror" onclick="UI.setCamera(2)">MIRROR MODE</li>
+					<li onclick="UI.setCamera(1)" id="buttonBird">BIRDS VIEW</li>
+					<li class="active" onclick="UI.setCamera(0)" id="buttonPerson">DEFAULT VIEW</li>
+				</ul>
+				<ul class="half">
+					<li onclick="UI.assetsLib(0)" class="active" id="buttonCourt">DEFAULT</li>
+					<li onclick="UI.assetsLib(1)" id="buttonDragon">FLAMES</li>
+					<li onclick="UI.assetsLib(2)" id="buttonBit">BIT COLLISION</li>
+				</ul>
+				
+				<hr />
+				
+				<div class="button bottom" onclick="UI.showMenu('_menu', this)" id="buttonMenuBack">BACK</div>
+				
+			</div>
+			
+			<!-- about page -->
+			<div id="_about" data-init="UI.aboutScroller()">
+				<div id="scrollWrapper">
+					<div id="scrollable">
+						Air hockey game demo in WebGL using three.js<br /><br />
+						Original Author: Rinesh Thomas<br /><br />
+						Kinect version, best played with two players
+					</div>
+				</div>
+				<div class="button bottom" onclick="UI.showMenu('_menu', this)" id="buttonMenuBack2">BACK</div>
+			</div>
+		</div>
+		
+		<!-- score board -->
+		<div id="_scoreBoard">
+			<span id="sc_pl1">0</span>
+			<span id="sc_pl2">0</span>
+		</div>
+		
+	</div>
+	
+</body>
+</html>

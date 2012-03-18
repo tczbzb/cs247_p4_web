@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>motor test</title>
+		
+		<script type="text/javascript" src="../../../kinect.js"></script>
+		
+	</head>
+	<body>
+		<div id="controls">
+			<a href="#" id="getAngle"> GET ANGLE </a> <br /><br />
+			<a href="#" id="resetAngle"> RESET ANGLE </a> <br /><br />
+			<input id="deg" type="text" value="10" />
+			<a href="#" id="setAngle">SET ANGLE</a>
+		</div>
+		
+		<script type="text/javascript">
+			kinect
+				.sessionPersist()
+				.modal.make()
+				.notif.make();
+			
+			kinect.addEventListener( 'motorAngleUpdated', function( deg ) {
+				alert( "Angle is : " + deg[ 0 ] );
+			});
+			
+			document.getElementById('getAngle').addEventListener('click', function( e ) {
+				e.preventDefault();
+				
+				kinect.motor.getCurrentAngle();
+			}, false);
+			
+			document.getElementById('setAngle').addEventListener('click', function( e ) {
+				e.preventDefault();
+				
+				kinect.motor.setCurrentAngle( document.getElementById('deg').value );
+			}, false);
+			
+			document.getElementById('resetAngle').addEventListener('click', function( e ) {
+				e.preventDefault();
+				
+				kinect.motor.defaultAngle();
+			}, false);
+			
+			
+		</script>
+		
+	</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript" src="../../../kinect.js"></script>
+
+
+<script id="main" type="text/javascript">
+/*******************************
+* Hand ported from Tonfall AS3 library
+* http://code.google.com/p/tonfall/
+*
+*
+* Tonfall is released under Lesser GPL
+*
+* please obtain a copy of the license here
+* http://www.gnu.org/licenses/lgpl.html
+********************************/
+
+/******************** KINECT CODE START *********************/
+kinect.setUp({
+	players  	: 1,
+	relative 	: true,
+	meters	 	: false,
+	sensitivity	: 1.0,							
+	joints	 	: [ 'HAND_RIGHT', 'HAND_LEFT' ],
+	gestures 	: [ 'HANDS_DIST', 'SWIPE', 'ESCAPE' ]
+	
+}).onMessage( function( e ) {
+	var coords = this.coords[ 0 ][ 0 ];
+
+	thereminDemo.is_playing = coords.z > -24 ? false : true;		//stop playing if the hand is not extended
+	
+	var y1 = ( coords.y - 110 ) * -1 / 200,							//shifting the value range
+		normFreq  =  y1 > 0.99 ? 0.99 : ( y1 < 0.0 ? 0.01 : y1 );	//limiting the values
+	
+	thereminDemo.setFrequency( MappingMapExp( normFreq, 20.0, 22050.0 ) );
+	
+	var y2 = ( this.coords[ 0 ][ 1 ].y - 110 ) * -1;				//shifting the value range
+	y2 = ( y2 < 0 ? 0 : ( y2 > 100 ? 99 : y2 ) ) / 200;				//limiting the values
+	
+	// Map Y to gain
+	var gain = y2;
+	thereminDemo.setGain( gain );
+
+	return false;
+});
+
+document.addEventListener( 'DOMContentLoaded', function() {
+
+	kinect
+		.sessionPersist()
+		.modal.make( '../../../knctModal.css' )	//kickstarting the modal						
+		.notif.make();	//kickstarting the notifications
+		
+}, false);
+
+//adding notifications on connection status
+kinect.addEventListener('openedSocket', function() { this.notif.push( "CONNECTED" ); });
+kinect.addEventListener('closedSocket', function() { this.notif.push( "DISCONNECTED" ) });
+
+//adding notifications on player detection/loss
+kinect.addEventListener('playerFound', function( count ) { this.notif.push( "PLAYER FOUND. Total : " + count[ 0 ] ) });
+kinect.addEventListener('playerLost', function( count ) { this.notif.push( "PLAYER LOST. Total : " + count[ 0 ] ) });
+
+kinect.addEventListener( 'gestureEscape', function( count ) {
+	if( count[ 0 ] !== 0 )
+		return false;
+		
+	if( count[ 1 ] === true )
+	{
+		kinect.notif.push( "ESCAPE..." );
+		window.escape = setTimeout(function() {
+			history.back();
+		},2000);
+	}
+	else
+	{
+		clearTimeout( window.escape );
+		window.escape = false;
+	}
+	
+	return false;
+});
+
+/******************** KINECT CODE END *********************/
+
+//theremin
+	function MappingMapExp(normalized, min, max )
+	{
+		return min * Math.exp( normalized * Math.log( max / min ) );
+	}
+	function ThereminProcessor( _context )
+	{
+		// Create an audio node for the tone generator
+		this.node = _context.createJavaScriptNode( 128, 1, 1 );
+	
+		// Setup audio data callback for this node. The callback is called
+		// when the node is connected and expects a buffer full of audio data
+		// in return.
+		var that = this;
+		
+		this.context = _context;
+			
+		this.node.onaudioprocess = function( e ) {
+			processSignals(e)
+		};
+	  
+		var INTERPOLATION_DURATION = 4410,
+			processSignals,
+			PI_2 = Math.PI * 2.0,
+			_phase,
+			_phaseIncrCurrent,
+			_phaseIncrTarget,
+			_phaseIncrVelocity,
+			_phaseIncrInterpolationRemaining,
+			_gainCurrent,
+			_gainTarget,
+			_gainVelocity,
+			_gainInterpolationRemaining;
+
+		this.constructor = function( bool ) {
+			_phase = 0.0;
+			_phaseIncrCurrent = _phaseIncrTarget = 0.0;
+			_gainCurrent = _gainTarget = 0.0;
+			
+			this.is_playing = bool ? false : true;
+			this.panner = this.node.context.createPanner();
+			
+			return this;
+		};
+		
+		this.connect = function() {
+			this.node.connect( this.context.destination );
+			
+			return this;
+		};
+		
+		this.setFrequency = function ( value ) {
+            if( value < 0.0 )
+                value = 0.0;
+            else
+                if( value > 22050.0 )
+                    value = 22050.0;
+                
+                var phaseIncr  = value / 44100.0;
+                
+                if( phaseIncr != _phaseIncrCurrent )
+                {
+                    _phaseIncrTarget = phaseIncr;
+                    _phaseIncrVelocity = ( _phaseIncrTarget - _phaseIncrCurrent ) / INTERPOLATION_DURATION;
+                    _phaseIncrInterpolationRemaining = INTERPOLATION_DURATION;
+				}
+        };
+		
+		this.setGain = function( value ) {
+                if( value < 0.0 )
+                    value = 0.0;
+                else
+					if( value > 1.0 )
+						value = 1.0;
+                
+                if( _gainCurrent != value )
+                {
+                    _gainTarget = value;
+                    _gainVelocity = ( _gainTarget - _gainCurrent ) / INTERPOLATION_DURATION;
+                    _gainInterpolationRemaining = INTERPOLATION_DURATION;
+                }
+        };
+		
+		processSignals = function( numSignals ) {
+			var signal = numSignals.outputBuffer.getChannelData(0),
+				signal_length =  signal.length;
+
+			if( !that.is_playing )
+			{
+				for( var i = 0 ; i < signal_length; ++i )
+					signal[ i ] = 0;
+
+				return false;
+			}
+
+			d.clearRect ( 0, 0 , 940 , 520 );
+			for( var i = 0 ; i < signal_length; ++i )
+			{
+				//-- GENERATE AMPLITUDE
+				signal[ i ] = Math.sin( _phase * PI_2 ) * _gainCurrent;
+				d.fillRect( i, 200 - signal[ i ] * 28, 1 , 1 );
+
+				//-- ADVANCE WAVESHAPE PHASE
+				_phase += _phaseIncrCurrent;
+				_phase -= Math.floor( _phase );
+				
+				//-- INTERPOLATE FREQUENCY (IN PHASE DOMAIN)
+				if( _phaseIncrInterpolationRemaining ) // greater than zero
+				{
+					if( 0 === --_phaseIncrInterpolationRemaining )
+						_phaseIncrCurrent = _phaseIncrTarget; // done interpolate
+					else
+						_phaseIncrCurrent += _phaseIncrVelocity; // interpolate
+				}
+
+				//-- INTERPOLATE GAIN
+				if( _gainInterpolationRemaining ) // greater than zero
+				{
+					if( 0 === --_gainInterpolationRemaining )
+						_gainCurrent = _gainTarget; // done interpolate
+					else
+						_gainCurrent += _gainVelocity; // interpolate
+				}
+			}
+        }
+
+		return this;
+	};
+</script>
+
+<body>
+	<h1> Theremin ( webkit only )</h1>
+	<script type="text/javascript">
+		//canvas draw audio wave
+		var z = document.createElement('canvas'),
+			c = document.getElementById('c'),
+			d = z.getContext('2d');
+			
+		(function( z, c, d ) {
+			z.style.cssText = 'display:block;margin:0 auto;';
+			document.body.appendChild(z);
+			z.width = 940;
+			z.height = 520;
+		})( z, c, d );
+
+		//theremin initialization
+		var thereminDemo = new ThereminProcessor( new webkitAudioContext() ).constructor().connect();
+	</script>
+</body>
+</html>

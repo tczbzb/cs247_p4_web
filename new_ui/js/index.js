@@ -81,7 +81,6 @@ function DS_goDirections() {
   
   google.maps.Event.addListener(DS_directions, 'load', function() {
     DS_directionsLoaded();
-    setTimeout("GA.Views.showNextView()", 2000);
   });
   
   google.maps.Event.addListener(DS_directions, 'error', function() {
@@ -387,6 +386,7 @@ function DS_formatTime(s) {
  * @param {Function?} opt_cb Optional callback to run when the command
  *     completes its task
  */
+var alreadyUrgent = false;
 function DS_controlSimulator(command, opt_cb) {
   switch (command) {
     case 'reset':
@@ -411,18 +411,28 @@ function DS_controlSimulator(command, opt_cb) {
             if (unit == 'ft') {
               var feetLeft = Math.max(0, Math.round(total - Math.round(DS_simulator.totalDistance / 1609.344 * 5280)));
               if (feetLeft < 200) {
-                $value.closest('.dirStepContent').addClass('urgent');
-                $value.html('COMING UP!');
+                if (!alreadyUrgent) {
+                  $value.closest('.dirStepContent').addClass('urgent');
+                  $value.html('COMING UP!');
+                  GA.Audio.REPORT_TURN_APPROACHING.play();
+                  alreadyUrgent = true;
+                }
               } else {
                 $value.html(feetLeft);
+                alreadyUrgent = false;
               }
             } else if (unit == 'mi') {
               var milesLeft = Math.max(0, roundNumber(total - (Math.round(DS_simulator.totalDistance / 1609.344 * 10) / 10), 1));
               if (milesLeft <= 0.1) {
-                $value.closest('.dirStepContent').addClass('urgent');
-                $value.html('COMING UP!');
+                if (!alreadyUrgent) {
+                  $value.closest('.dirStepContent').addClass('urgent');
+                  $value.html('COMING UP!');
+                  GA.Audio.REPORT_TURN_APPROACHING.play();
+                  alreadyUrgent = true;
+                }
               } else {
                 $value.html(milesLeft);
+                alreadyUrgent = false;
               }
             }
           }
@@ -446,13 +456,13 @@ function DS_controlSimulator(command, opt_cb) {
         var icon = new google.maps.Icon();
         icon.iconSize = new google.maps.Size(42, 42);
         icon.iconAnchor = new google.maps.Point(21, 21);
-        icon.image = 'smart_marker.png';
+        icon.image = 'images/marker.png';
         DS_mapMarker = new google.maps.Marker(
                        DS_simulator.currentLoc, {icon: icon});
         DS_map.addOverlay(DS_mapMarker);
       }
       
-      DS_map.setZoom(13);
+      DS_map.setZoom(17);
       DS_mapMarker.setLatLng(DS_simulator.currentLoc);
       
       DS_updateSpeedIndicator();
@@ -525,6 +535,12 @@ function DS_previousStep() {
   }
 }
 
+
+
+var inStreetView = false;
+var BUFFER = 20;
+var lastRange = -1;
+
 // Can only go to the current step's street view for now.
 function zoomInSwitch() {
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
@@ -539,32 +555,67 @@ function zoomInSwitch() {
 			90, // tilt
 			10 // range (inverse of zoom)
 		);
+		lastRange = 10; // same as above
 		DS_ge.getView().setAbstractView(lookAt);
+		inStreetView = true;
 	}
 }
-
 function DS_zoomIn() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-	// Zoom in to half the current range.
-	lookAt.setRange(lookAt.getRange() / 2.0);
+	var currRange = lookAt.getRange();
+	
+	if (lastRange == -1) {
+	  lastRange = currRange;
+	}
+	if (currRange < 50 || currRange > lastRange + BUFFER) {
+	  //console.log('range too close!');
+	  return false; 
+	}
+	
+	// Play a sound.
+  GA.Audio.EFFECT_ZOOM_IN.play();
+	
+	lookAt.setRange(currRange / 2.0);
+	lastRange = currRange / 2.0;
 	
 	// Stay centered on the current step or current car location.
-	if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+  /*	
+  
+  this was buggy for some reason. caused the map to recenter on the current step marker,
+  even if the DS_simulator was not null.
+  
+  if (DS_simulator != null && DS_simulator.totalDistance > 0) {
 	  lookAt.setLatitude(DS_simulator.currentLoc.lat());
 	  lookAt.setLongitude(DS_simulator.currentLoc.lng());
   } else {
     lookAt.setLatitude(DS_steps[DS_currentStep].loc.lat());
 	  lookAt.setLongitude(DS_steps[DS_currentStep].loc.lng());
-  }
+  }*/
   
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
 	zoomInSwitch();
+	
+	return true;
 }
 function DS_zoomOut() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+	var currRange = inStreetView ? 10 : lookAt.getRange();
+	
+	if (lastRange == -1) {
+	  lastRange = currRange;
+	}
+	/*if (currRange < lastRange - BUFFER) {
+	  return false; 
+	}*/
+	
+	// Play a sound.
+  GA.Audio.EFFECT_ZOOM_OUT.play();
+	
+	inStreetView = false;
+	
 	if (lookAt.getTilt() > 0) {
 		lookAt.setTilt(0);
 		lookAt.setRange(100);
@@ -579,9 +630,13 @@ function DS_zoomOut() {
     }
 	}
 	// Zoom out to twice the current range.
-	lookAt.setRange(lookAt.getRange() * 2.0);
+	lookAt.setRange(currRange * 2.0);
+	lastRange = currRange * 2.0;
+	
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
+	
+	return true;
 }
 
 // Driving Controls

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<head>
+	<title>Kinect JS / Nix</title>
+
+	<script type="text/javascript" src="../kinect.js"></script>
+	<script type="text/javascript" src="threejs/Three.js"></script>
+	<script src="js/metro.js"></script>
+
+	<link href="css/global.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href='http://fonts.googleapis.com/css?family=Glegoo' rel='stylesheet' type='text/css'>
+	<link href="css/index.css" media="screen" rel="stylesheet" type="text/css" />
+
+</head>
+<body>
+	<div id="wrap" class="slide">
+		<h1>Kinect JS</h1>
+
+		<ul id="tiles">
+			<li onclick="window.location='examples/nokia/WebGlMaps.html'" class="high map"><h2>WebGL Maps</h2><span></span></li>
+			<li onclick="window.location='examples/cars/cars.htm'" class="cars" ><h2>WebGL Cars</h2><span></span></li>
+			<li onclick="window.location='examples/fastkat.html'" class="wide fastkat"><h2>Fast Kat</h2><span></span></li>
+			<li onclick="window.location='examples/hockey/index.html'" class="hockey"><h2>Air Hockey</h2><span></span></li>
+			<li onclick="window.location='examples/pong/index.html'" class="pong"><h2>Pong</h2><span></span></li>
+			<li onclick="window.location='examples/tilt/tunneltilt.htm'" class="tilt"><h2>BlackBerry Demo</h2><span></span></li>
+			<li onclick="window.goToGallery();" id="picContainer" class="square"><h2>Pictures</h2><span></span></li>
+			<li onclick="window.location='examples/theremin/index.html'" class="theremin"><h2>Theremin</h2><span></span></li>
+			<li><h2>Players</h2><h4 id="skCount">0</h4><img id="skImg" src="images/icons/sad.png" height="125" /><span></span></li>
+			<li onclick="window.location='examples/duckhunt/index.html'" class="duckhunt"><h2>Duckhunt</h2><span></span></li>
+
+			<li id="audioMess" class="mess" onclick="window.location='examples/misc/stream.html'" ><h2>Audio Mess (N/A : stream demo)</h2><span></span></li>
+		</ul>		
+	</div>
+	
+	<div id="wrap2" class="slide">
+		<h2><< Swipe to go Back</h2>
+		<div id="gallery">
+		</div>
+			
+	</div>
+
+	<div id="container"></div>
+	<script type="text/javascript">
+	
+	//initializing the metro interface
+	window.metro( document.getElementById('tiles') );
+	
+	/********************** KINECT CODE START **********************/
+	(function( kinect ) {
+		var cursor;
+		
+		//on dom load
+		document.addEventListener( 'DOMContentLoaded', function() {
+			//kinect setup
+			kinect.setUp({
+					players  	: 1,				//num of players
+					relative 	: true,				//tracking mode
+					meters	 	: false,			//tracking mode continued
+					sensitivity : 1.2,				//semsitivity
+					joints	 	: [ 'HAND_RIGHT', 'HEAD', 'HAND_LEFT', 'HANDS_DIST' ],	//tracked nodes
+					gestures 	: [ 'SWIPE', 'HANDS_DIST' ]								//tracked gestures
+				})
+				.sessionPersist()	//keep the session between page loads (of the same domain)
+				.modal.make( '../knctModal.css' )		//kickstarting the modal						
+				.notif.make();		//kickstarting the notifications
+				
+			//CURSOR
+			cursor = kinect.cursor.make()			//constructing the cursor
+						.useSmoothing( 2 )			//use a bit of smoothing
+						.useBothHands( true )		//use both hands (if available)
+						.action( 'z-axis', -51 )	//z-axis percent, when should the kinectTouch events be dispatched
+						.activate();				//kickstarting the cursor
+
+			//REGISTERING THE BUTTONS
+			var tiles = document.getElementById('tiles').getElementsByTagName('li'),
+				len	  = tiles.length;
+			
+			while( len-- )
+			{
+				cursor.addRegion( tiles[ len ], 4 );	//separate smoothing/gravity for the tiles and binding the action
+
+				tiles[ len ].addEventListener( 'kinectTouchStart', function(e) { //on kinectTouchStart add hover-class
+					this.initClass = this.className;
+					this.className += ' over';
+				}, false );
+				
+				tiles[ len ].addEventListener( 'kinectTouchEnd', function(e) {	//on kinectTouchEnd remove the class
+					this.className = this.initClass;
+				}, false );
+				
+			}			
+		}, false);
+		
+		//adding notifications on connection status
+		kinect.addEventListener( 'openedSocket', function() {
+			this.notif.push( "CONNECTED" );
+			this.scanForHead();
+			
+			setTimeout(function() {	//changing the smiley at the "players tile"
+				document.getElementById('skCount').innerHTML = kinect.sk_len;
+				 if( kinect.sk_len === 0 )
+					document.getElementById('skImg').src = 'images/icons/sad.png';
+				 else if( kinect.sk_len === 1 )
+					document.getElementById('skImg').src = 'images/icons/happy.png';
+				else
+					document.getElementById('skImg').src = 'images/icons/ecstatic.png';
+			},200);
+		});
+		kinect.addEventListener( 'closedSocket', function() { this.notif.push( "DISCONNECTED" ) });
+		
+		//adding notifications on player detection/loss
+		kinect.addEventListener( 'playerFound', function( count ) {
+			document.getElementById('skCount').innerHTML = count[ 0 ];
+			if(  count[ 0 ] === 1 )		//changing the smiley at the "players tile"
+				document.getElementById('skImg').src = 'images/icons/happy.png';
+			else
+				document.getElementById('skImg').src = 'images/icons/ecstatic.png';
+		});
+		
+		kinect.addEventListener( 'playerLost', function( count ) {
+			document.getElementById('skCount').innerHTML = count[ 0 ];
+			 
+			if( count[ 0 ] === 0 )		//changing the smiley at the "players tile"
+				document.getElementById('skImg').src = 'images/icons/sad.png';
+			else if( count[ 0 ] === 1 )
+				document.getElementById('skImg').src = 'images/icons/happy.png';
+			else
+				document.getElementById('skImg').src = 'images/icons/ecstatic.png';
+		});
+		
+		//show the gallery window (helper)
+		window.goToGallery = function() {
+			document.getElementsByClassName('slide')[0].style.left = '-100%';
+			document.getElementsByClassName('slide')[1].style.left = '0';
+			
+			PAUSE_BACKGROUND = true;	//pause the background to save cycles
+			
+			return false;
+		};
+		
+		//sliding the the gallery on 'right' gestureSwipe of the first player
+		kinect.addEventListener( 'gestureSwipe', function( args ) {
+			if( args[ 0 ] === 0 )	//if we are targeting the first player
+			{
+				if( args[ 2 ] === 'left' )	// direction
+					window.goToGallery();
+
+				else if( args[ 2 ] === 'right' )	//else return to the main window
+				{
+					PAUSE_BACKGROUND = false;
+					document.getElementsByClassName('slide')[0].style.left = '0';
+					document.getElementsByClassName('slide')[1].style.left = '100%';
+				}				
+			}
+			return false;
+		});
+		
+	//PICTURE/GALLERY MAKER
+	(function() {
+		var container = document.getElementById( 'picContainer' ),
+			img = null,
+			tmp,
+			span,
+			sign = -1,
+			date,
+			calc,
+			gallery	= document.getElementById('gallery'),
+			picture_holder = [],
+			i,
+			j = 5; //show only the 6 latest pictures
+
+		picture_holder = kinect.imageCommands.purgeGallery( 7 );
+		var slen = picture_holder.length;
+		
+		for( i = 0; i < slen; ++i )
+		{
+			img = document.createElement('img');
+			img.src = tmp = localStorage.getItem( picture_holder[ i ] );
+			container.appendChild( img );
+			
+			var imgCont = document.createElement('div');
+			span = document.createElement('span');
+			img = document.createElement('img');
+			imgCont.id = 'img' + j;
+			
+			//place them randomly
+			sign = j % 2 ? -1 : 1;
+			calc = ( sign * j * 6 );
+			imgCont.style.cssText = '-webkit-transform: rotate(' + calc + 'deg) scale(0.65);-moz-transform: rotate(' + calc + 'deg) scale(0.65);z-index:' + j + ';top:' + ( 5 + ( sign * j * 1 ) + Math.floor( Math.random()* 30 ) - 15 ) + '%;left:' + ( 25 + ( sign * j * 2 ) + Math.floor( Math.random()* 30 ) - 14 ) + '%;';
+			img.src = tmp;
+			
+			//extracting date from the localStorage key
+			date = new Date( picture_holder[ i ].substr( picture_holder[ i ].indexOf('img_') + 4 ) / 1 );
+			span.innerHTML = date;
+			span.innerHTML = date.getDay() + ' / ' + ( date.getMonth() + 1 ) + ' / ' + date.getFullYear();
+			
+			imgCont.appendChild( img );
+			imgCont.appendChild( span );
+			gallery.appendChild( imgCont );
+			
+			kinect.cursor.addRegion( imgCont, 5 );
+			
+			//GALLERY CONTROLS
+			imgCont.addEventListener( 'kinectTouchStart', function( e ) {
+				if( window.performRotation || window.beingPushed )
+					return false;
+
+				var style = this.style,
+					cursor = kinect.cursor,
+					q = this;
+				
+				if( !this.oldStyle )
+					 this.oldStyle = {};
+					 
+				this.beingPushed = true;
+				window.beingPushed = true;
+				
+				cursor.cursorStyle.opacity = 0;
+				
+				this.interval = setInterval(function() {
+					if( cursor.z > -50 && !window.performRotation )
+					{
+						window.beingPushed = false;
+						kinect.removeAllListeners( 'gestureCrank_ON' );
+						kinect.removeAllListeners( 'gestureCrank_OFF' );
+						
+						var style = q.style,
+							oldStyle = q.oldStyle;
+							
+						q.beingPushed = false;
+						clearInterval( q.interval );
+						q.interval = null;
+							
+						style.zIndex = oldStyle.zIndex;
+						style.webkitTransform = oldStyle.webkitTransform;
+						style.mozTransform = oldStyle.mozTransform;
+					
+						cursor.cursorStyle.opacity = 0.7;
+					
+						return false;
+					}
+					
+					if( q.beingPushed && !q.performRotation )
+					{
+						q.style.left = ( parseInt( cursor.x ) - 2 )  + '%';
+						q.style.top = ( parseInt( cursor.y ) - 2 )  + '%';
+					}
+					else if( q.performRotation )
+					{
+						var point1X = 0,
+							point1Y = 0,
+							point2X = kinect.coords[ 0 ][ 3 ].x,
+							point2Y = kinect.coords[ 0 ][ 3 ].y,
+							angle = ( Math.atan2( ( point1Y - point2Y ),( 1 - point2X ) ) *( 180 / Math.PI ) ) >> 0,
+							distance = Math.sqrt( ( point2X - point1X ) * ( point2X - point1X ) + ( point2Y - point1Y ) * ( point2Y - point1Y ) ) >> 0;
+							
+							distance = distance * 2 / 100;
+							
+							
+						q.style.webkitTransform = q.oldStyle.webkitTransform = 'rotate(' + angle + 'deg) scale(' + distance + ')';
+						q.style.mozTransform = q.oldStyle.mozTransform = 'rotate(' + + 'deg) scale(' + distance + ')';
+					}
+					return false;
+				}, 70);
+				
+				this.oldStyle.zIndex = style.zIndex;
+				this.oldStyle.webkitTransform = style.webkitTransform;
+				this.oldStyle.mozTransform = style.mozTransform;
+				
+				style.zIndex = '2000';
+				//style.webkitTransform = style.mozTransform = 'rotate(0deg) scale(0.7)';
+				
+				
+				//add event listener for crank
+				kinect.removeAllListeners( 'gestureCrank_ON' );
+				kinect.removeAllListeners( 'gestureCrank_OFF' );
+
+				kinect.addEventListener( 'gestureCrank_ON', function() { 
+					//start rotation based code
+					window.performRotation = true;
+					q.performRotation = true;
+					//push notification that rotation no longer happens
+					kinect.notif.push( "Image Rotation ON" );
+				});
+				kinect.addEventListener( 'gestureCrank_OFF', function() {
+					window.performRotation = false;
+					q.performRotation = false;
+					
+					//push notification that rotation no longer happens
+					kinect.notif.push( "Image Rotation OFF" );
+				});
+				
+			}, false );
+			
+			if( --j === 0 )
+				break;
+		}
+		
+		//setting the intervals
+		if( j < 6 && slen > 0 )
+		{
+			if( container.getElementsByTagName('img')[0] )
+				container.getElementsByTagName('img')[0].className = 'fadeIn';
+				
+			setInterval( function() {
+				var curr = container.getElementsByClassName('fadeIn')[0],
+					next;
+				
+				if( !curr )
+				{
+					container.getElementsByTagName('img')[0].style.opacity = '1';
+					container.getElementsByTagName('img')[0].className = 'fadeIn';
+				}
+				else
+				{
+					curr.className = 'fadeOut';
+					curr.style.opacity = '0';
+					
+					next = curr.nextSibling;
+					while( next && next.tagName !== 'IMG' )
+					{
+						next = curr.nextSibling;
+					}
+					
+					if( next )
+					{
+						next.className = 'fadeIn';
+						next.style.opacity = '1';
+					}
+					else
+					{
+						container.getElementsByTagName('img')[0].style.opacity = '1';
+						container.getElementsByTagName('img')[0].className = 'fadeIn';
+					}
+				}
+
+				return false;
+			}, 3000);
+		}
+	})();
+		
+	})( kinect );
+	
+	//BACKGROUND
+	var PAUSE_BACKGROUND = false;
+	(function( THREE ) {
+		var scene, renderer;
+		var camera, cameraControl;
+		
+		PAUSE_BACKGROUND = false;
+		
+		function init() {
+			var canvas = document.createElement( 'canvas' );
+			canvas.style.cssText = 'width:100%;height:100%;';
+			document.getElementById( 'container' ).appendChild( canvas );
+				
+			renderer = new THREE.WebGLRenderer( { 'canvas' : canvas, antialias		: true } );
+			renderer.setClearColorHex( 0xffffff, 1 );
+
+			scene = new THREE.Scene();
+
+			camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000 );
+			camera.position.set(0, 0, 7);
+			camera.lookAt(scene.position)
+			scene.add( camera );
+
+			var light	= new THREE.DirectionalLight( 0xED91EA, 1.5 );
+			light.position.set( 1, 1, 0 ).normalize();
+			scene.add( light );
+
+			var light	= new THREE.DirectionalLight( 0xffffff, 1 );
+			light.position.set( -1, 1, 0 ).normalize();
+			scene.add( light );
+
+			var light	= new THREE.PointLight( 0xffffff, 15, 100 );
+			light.position.set( 0, -3, 0 );
+			scene.add( light );
+
+			var light	= new THREE.PointLight( 0x0BDE9F, 20, 30 );
+			light.position.set( 3, 3, 0 );
+			scene.add( light );
+
+			scene.fog	= new THREE.FogExp2( 0xffffff, 0.2 );
+			
+			var geometry	= new THREE.CylinderGeometry( 1, 1, 30, 32, 1, true );
+			texture		= THREE.ImageUtils.loadTexture( "images/root/clouds.jpg" );
+			texture.wrapT	= THREE.RepeatWrapping;
+
+			var material	= new THREE.MeshLambertMaterial({color : 0xffffff, map : texture});
+			var mesh	= new THREE.Mesh( geometry, material );
+			mesh.rotation.x	= Math.PI / 2;
+			scene.add( mesh );
+
+			mesh.flipSided	= true;
+		}
+		
+		if( !init() )	animate();
+	
+		function animate() {
+			if( window.webkitRequestAnimationFrame )
+				webkitRequestAnimationFrame( animate );
+			else
+				mozRequestAnimationFrame( animate );
+				
+			render();
+		}
+
+		function render() {
+			if( PAUSE_BACKGROUND )	//do not render if we have paused the background
+				return false;
+				
+			texture.offset.y	+= 0.002;
+			texture.offset.y	%= 1;
+			texture.needsUpdate	= true;
+			var seconds		= Date.now() / 1000;
+			var radius		= 0.70;
+			var angle		= Math.sin(0.75 * seconds * Math.PI) / 4;
+			camera.position.x	= Math.cos(angle - Math.PI/2) * radius;
+			camera.position.y	= Math.sin(angle - Math.PI/2) * radius;
+			camera.rotation.z	= angle;
+
+			renderer.render( scene, camera );
+		}
+	})( THREE );
+	</script>
+</body>
+</html>

@@ -349,7 +349,7 @@
     'use strict';
     
     // keyboard navigation handler
-    document.addEventListener("keydown", function ( event ) {
+    /*document.addEventListener("keydown", function ( event ) {
         if ( event.keyCode == 9 || ( event.keyCode >= 32 && event.keyCode <= 34 ) || (event.keyCode >= 37 && event.keyCode <= 40) ) {
             switch( event.keyCode ) {
                 //case 33: ; // pg up
@@ -368,10 +368,10 @@
             
             //event.preventDefault();
         }
-    }, false);
+    }, false);*/
     
     // delegated handler for clicking on the links to presentation steps
-    document.addEventListener("click", function ( event ) {
+    /*document.addEventListener("click", function ( event ) {
         // event delegation with "bubbling"
         // check if event target (or any of its parents is a link)
         var target = event.target;
@@ -408,7 +408,7 @@
             event.preventDefault();
         }
     }, false);
-    
+    */
     // touch handler to detect taps on the left and right side of the screen
     document.addEventListener("touchstart", function ( event ) {
         if (event.touches.length === 1) {

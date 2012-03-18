@@ -1,0 +1,464 @@
+@font-face{
+    font-family:'NokiaPureTextLight';
+    src:url('../font/nokiapuretextlight-webfont.eot') format('eot'),
+        url('../font/nokiapuretextlight-webfont.ttf') format('truetype'),
+        url('../font/nokiapuretextlight-webfont.svg#NokiaLarge-Light') format('svg');
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+body {
+  -webkit-user-select:none;
+  -moz-user-select:none; 
+  background-color: #F5F5F5;
+}
+
+/* welcome -screen*/ 
+
+#welcome-screen {
+  position:absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.backgroundImage2 
+{
+  position:absolute;
+  width: 100%;
+  height: 100%;
+  background-image:url("../images/background.jpg");
+  background-repeat: no-repeat;
+}
+
+.backgroundImage {
+  background-image:url("../images/background.jpg");
+  background-repeat: no-repeat;
+}
+#welcome-info {
+    top: 40%;
+    left: 20px;
+    position: absolute;
+    letter-spacing: -0.3px;
+}
+
+#welcome-text {
+    background-color: rgba(0, 15, 26, 0.85);
+    clear: both;
+    padding: 12px;
+    color: #FFFFFF;
+    font-family: 'NokiaPureTextLight';
+}
+#welcome-text h1 {
+    font-size: 48px;
+    line-height: 52px;
+    margin: 0px;
+}
+#welcome-text h2 {
+    font-size: 24px;
+    line-height: 28px;
+    margin: 10px 0px 0px 0px;
+}
+.blue {
+    color: #00BBDD;
+}
+
+.blue:link {
+    text-decoration: none
+}
+#maps-link {
+  background-color: rgba(0, 15, 26, 0.85);
+  clear: both;
+  padding: 13px;
+  margin-top: 1px;
+  display:none;
+}
+#maps-link #earth-icon {
+  width:18px;
+  height:18px;
+  background-image:url("../images/earth_blue.png");
+  float:left;
+  margin-right: 5px;
+}
+#maps-link:hover #earth-icon {
+  background-image:url("../images/earth_white.png");
+}
+#maps-link a {
+  color: #00bbdd;
+  font-family: 'NokiaPureTextLight';
+  text-decoration:none;
+  font-size:14px;
+  font-weight:bold;
+}
+#maps-link:hover {
+  background-color: #00bbdd;
+}
+#maps-link:hover a {
+  color: white;
+}
+
+/* maps Page */
+
+#mapscontainer {
+  width: 100%;
+  height: 100%;
+  display:none;
+}
+
+#map3d {
+  width: 100%;
+  height: 100%;
+}
+#map3d  canvas{
+	  width: 100% !important;
+	height: 100% !important;
+}
+/* spinner */
+
+#loading-spinner {
+  background-image: url("../images/spinner.gif");
+  width: 16px;
+  height: 16px;
+  z-index: 100;
+  display:none;
+  margin-left: 10px;
+  margin-top: 7px;
+}
+#topbar{
+  -moz-box-shadow:0 2px 3px 1px rgba(0,0,0,0.15);
+  -webkit-box-shadow:0 2px 3px rgba(0,0,0,.15);
+  box-shadow:0 2px 3px 1px rgba(0,0,0,0.15);
+  filter:progid:DXImageTransform.Microsoft.Shadow(Color=#eeeeee,Direction=180,Strength=6);
+  background-color:#FFF;
+  cursor:default;
+  height:30px;
+  position:relative;
+  width:100%;
+  z-index:11;
+}
+#topbar .nokia-logo{
+  background:transparent url(../images/nokia_logo.png) no-repeat 16px 9px;
+  display:block;
+  float:left;
+  height:30px;
+  width:95px;
+}
+#topbar .service-navigation ul li a.active {
+  background-color: #DCE3EF;
+  color: #124191;
+}
+#topbar .service-navigation ul {
+  margin: 0px;
+}
+#topbar .service-navigation ul li {
+  list-style: none outside none;
+  float:left;
+}
+#topbar .service-navigation ul li a {
+  border-radius: 0 0 0 0;
+  display: inline-block;
+  border: 0 none;
+  font-family: 'NokiaPureTextLight',Arial;
+  text-decoration: none;
+  text-indent: 0;
+  text-align: left;
+  padding-bottom: 0px;
+  padding-top: 1px;
+  line-height: 12px;
+}
+#topbar .service-navigation ul li #maps-menu {
+  border-radius: 0 0 0 0;
+  display: inline-block;
+  border: 0 none;
+  font-family: 'NokiaPureTextLight',Arial;
+  text-decoration: none;
+  text-indent: 0;
+  text-align: left;
+  background-color: #DCE3EF;
+  color: #124191;
+}
+#topbar .service-navigation ul li div .beta{
+  color: #00BBDD;
+  font-weight: bold;
+  font-size: 10px;
+}
+
+#topbar .mainNav {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+#topbar .mainNav li #maps-menu {
+  height: 30px;
+  line-height: 34px;
+  padding: 0 15px;
+}
+
+#topbar .metaNav {
+  display: inline;
+  float: right;
+  margin-top: 4px;
+  overflow: hidden;
+
+}
+#topbar .metaNav li {
+  margin: 0px 20px 0px 5px;
+  display: inline;
+}
+#topbar .metaNav  li a {
+  color: #4C4C4C;
+  font-size: 10px;
+  line-height: 15px;
+  margin: 0px -5px;
+  padding: 2px 5px;
+  margin-top: 8px;
+}
+#topbar .metaNav li a:hover {
+  background-color: #D6D6D6;
+  color: #4C4C4C;
+  border-radius: 5px 5px 5px 5px;
+}
+
+#supply {
+    position:absolute;
+    z-index: 5;
+}
+
+/* Watermark */
+.watermark {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 52px;
+    height: 19px;
+    background: url("../images/logo.png") no-repeat;
+    background-position: 0 0;
+}
+
+/* Copyright */
+
+.copyright {
+    position: absolute;
+    bottom: 12px;
+    height: 25px;
+    left: 12px;
+    width: 150px;
+    font-size: 10px;
+    font-style:bold;
+    font-family: NokiaPureTextLight,arial,sans-serif;
+    color: #ffffff;
+    white-space: nowrap;
+}
+.copyright #watermark {
+  margin-bottom:5px;
+  position: absolute;
+  bottom: 23px;
+}
+/* CONTROLS */
+
+.mapControl {
+    background: url("../images/mc.png") no-repeat scroll 1000px 1000px transparent;
+}
+#controls {
+    position:absolute;
+    bottom:20px;
+    width:100%;
+}
+#controls #mapControls {
+    z-index: 50;
+    position:relative;
+    width: 190px;
+    height: 60px;
+    margin-left: auto;
+    margin-right:auto;
+}
+/* focus Earth control */
+#controls #mapControls #centerEarthButton {
+  background-image: url("../images/globe_default.png");
+  float:left;
+  width:32px;
+  height:34px;
+  margin-left: 6px;
+  margin-top: 9px;
+}
+#controls #mapControls #centerEarthButton:hover {
+  background-image: url("../images/globe_hover.png");
+}
+#controls #mapControls #centerEarthButton:active {
+  background-image: url("../images/globe_click.png");
+}
+
+/*panControls*/
+
+#controls #mapControls #panControls.mapControl {
+    -moz-user-select: none;
+    background-position: -56px 0;
+    cursor: pointer;
+    float: left;
+    height: 56px;
+    margin: 0 20px 0 0;
+    position: relative !important;
+    bottom:3px;
+    width: 56px;
+    z-index: 100;
+    margin-right: 20px;
+    margin-left: 22px;
+}
+
+.panButton {
+    height: 10px;
+    position: absolute;
+    width: 10px;
+    z-index: 150;
+
+}
+#controls #mapControls .mapControl#move-right {
+    background-position: -112px -10px;
+    right: 5px;
+    top: 23px;
+}
+#controls #mapControls .mapControl#move-right.hightlight {
+    background-position: -122px -10px;
+}
+#controls #mapControls .mapControl#move-left {
+    background-position: -112px -30px;
+    left: 5px;
+    top: 23px;
+}
+#controls #mapControls .mapControl#move-left.hightlight {
+    background-position: -122px -30px;
+}
+#controls #mapControls .mapControl#move-up {
+    background-position: -112px 0;
+    left: 23px;
+    top: 5px;
+}
+#controls #mapControls .mapControl#move-up.hightlight {
+    background-position: -122px 0;
+}
+#controls #mapControls .mapControl#move-down {
+    background-position: -112px -20px;
+    bottom: 5px;
+    left: 23px;
+}
+#controls #mapControls .mapControl#move-down.hightlight {
+    background-position: -122px -20px;
+}
+
+/* zoom Controls */
+#controls #mapControls #zoomControls.mapControl {
+    background-position: -161px 0;
+    height: 45px;
+    width: 16px;
+    position: relative;
+    margin: 6px 10px 0 0;
+    float:left;
+}
+#controls #mapControls .mapControl#zoom-in {
+    background-position: -193px 0;
+    cursor: pointer;
+    height: 8px;
+    left: 2px;
+    position: absolute;
+    top: 4px;
+    width: 12px;
+}
+#controls #mapControls .mapControl#zoom-in.highlight {
+    background-position: -193px -8px;
+}
+#controls #mapControls .mapControl#zoom-out {
+    background-position: -193px -24px;
+    bottom: 6px;
+    cursor: pointer;
+    height: 8px;
+    left: 2px;
+    position: absolute;
+    width: 12px;
+}
+#controls #mapControls .mapControl#zoom-out.highlight {
+    background-position: -193px -32px;
+}
+
+/* tilt Controls */
+#controls #mapControls #tiltControls.mapControl {
+    background-position: -161px 0;
+    float: left;
+    height: 45px;
+    margin: 6px 10px 0 0;
+    position: relative;
+    width: 16px;
+    z-index: 100;
+
+}
+#controls #mapControls .mapControl#tilt-up {
+    background-position: -205px 0;
+    cursor: pointer;
+    height: 8px;
+    left: 2px;
+    position: absolute;
+    top: 4px;
+    width: 12px;
+
+}
+#controls #mapControls .mapControl#tilt-up.highlight {
+    background-position: -205px -8px;
+}
+#controls #mapControls .mapControl#tilt-down {
+    background-position: -205px -24px;
+    bottom: 6px;
+    cursor: pointer;
+    height: 8px;
+    left: 2px;
+    position: absolute;
+    width: 12px;
+}
+#controls #mapControls .mapControl#tilt-down.highlight {
+    background-position: -205px -32px;
+}
+
+
+
+/* rotate Controls*/
+#controls #mapControls #rotateControls.mapControl {
+    background-position: 0 -56px;
+    cursor: pointer;
+    float: left;
+    height: 80px;
+    left: -12px;
+    position: absolute !important;
+    top: -15px;
+    width: 80px;
+    z-index: 101;
+    margin-left: 60px;
+}
+
+#controls #mapControls #rotateControls.mapControl #dot {
+  background-position: -24px -137px;
+  height: 11px;
+  position: absolute;
+  width: 10px;
+  z-index: 10;
+  left: 35px;
+  top: 2px;
+}
+#controls #mapControls #rotateControls.mapControl #dot:hover {
+  background-position: -34px -137px;
+}
+
+#controls #mapControls #rotateControls.mapControl #north {
+  background-position: 0 -137px;
+  height: 8px;
+  position: absolute;
+  width: 8px;
+  z-index: 11;
+}
+#controls #mapControls #rotateControls.mapControl #north:hover {
+  background-position: -8px -137px;
+}
+
+
+

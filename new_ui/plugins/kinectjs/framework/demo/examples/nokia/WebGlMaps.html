@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <link rel="icon" type="image/png" href="http://maps3d.svc.nokia.com/webgl/images/Favicon.png">
+
+	   <script src="../../../kinect.js"></script>
+	  
+        <link href="./WebGlMaps_files/nw.css" rel="stylesheet" type="text/css">
+        <script src="./WebGlMaps_files/jquery-1.6.4.min.js"></script>
+        <script src="./WebGlMaps_files/config.js"></script>
+        <script src="./WebGlMaps_files/rotate_control.js"></script>
+        <script src="./WebGlMaps_files/controls.js"></script>
+        <script src="./WebGlMaps_files/labels.js"></script>
+        <script src="./WebGlMaps_files/nw_app.js"></script>
+        <script src="./WebGlMaps_files/webglcheck.js"></script>
+        <script src="http://maps3d.svc.nokia.com/webgl/scripts/min.test.js"></script>
+		
+	<link href='http://fonts.googleapis.com/css?family=Glegoo' rel='stylesheet' type='text/css'>
+		
+	<script type="text/javascript">
+		/******************************
+		* #### CUSTOM KINECTJS CODE
+		*
+		* If you wish to inspect the controls, please see
+		* the controls.js / rotate_control.js
+		*******************************/
+		document.addEventListener( 'DOMContentLoaded', function() {	//on dom load
+			kinect
+				.sessionPersist()	//maintain session in the same domain
+				.modal.make( '../../../knctModal.css' )		//kickstart the modal						
+				.notif.make();		//kickstart the notifications
+		}, false);
+		
+		//adding notifications on connection status
+		kinect.addEventListener('openedSocket', function() { this.notif.push( "CONNECTED" ); });
+		kinect.addEventListener('closedSocket', function() { this.notif.push( "DISCONNECTED" ) });
+		
+		//adding notifications on player detection/loss
+		kinect.addEventListener('playerFound', function( count ) { this.notif.push( "PLAYER FOUND. Total : " + count[ 0 ] ) });
+		kinect.addEventListener('playerLost', function( count ) { this.notif.push( "PLAYER LOST. Total : " + count[ 0 ] ) });
+		
+		//show "escape..." notification
+		kinect.addEventListener( 'gestureEscape', function( args ) {
+			if( args[ 1 ] === true )
+				kinect.notif.push( "ESCAPE..." );
+			return false;
+		})
+		//go back after staying in the 'escape' position
+		.addEventListener( 'escapeInterval', function( args ) {
+			history.back();
+		});
+		
+		//setting up the tracking options (called once per pageload)
+		kinect.setUp({
+			players  	: 1,
+			relative 	: true,
+			meters	 	: false,
+			sensitivity	: 1.2,						
+			joints	 	: [ 'HAND_RIGHT', 'HEAD', 'HAND_LEFT', 'HANDS_DIST' ],
+			gestures 	: [ 'HANDS_DIST', "BODY_ANGLE", 'ESCAPE' ]
+		});
+	</script>
+	
+	<!-- default nokia code below -->
+  </head>
+   <body onload="check.start(false)">
+        <div id="topbar">
+          <div class="service-navigation">
+            <span title="Nokia" class="nokia-logo">&nbsp;</span>
+            <ul class="mainNav">
+              <li>
+                <div id="maps-menu">Maps 3D WebGL<span class="beta">  beta</span></div>
+              </li>
+              <li>
+                <div id="loading-spinner" style="display: block; "></div>
+              </li>
+            </ul>
+            <ul class="metaNav">
+              <li><a title="Go To maps.nokia.com" href="http://maps.nokia.com/">Go to Nokia Maps</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div id="welcome-screen">
+          <div id="welcome-info">
+            <div id="welcome-text" class="nokiatext">
+              <h1> Nokia Maps 3D <br> WebGL (beta) </h1>
+              <h2 id="checked"> 100% 3D maps, 0% plug-in. </h2>
+            </div>
+            <div id="maps-link">
+              <div id="earth-icon"></div>
+              <a href="http://maps.nokia.com/">Go to Nokia Maps</a>
+            </div>
+          </div>
+        </div>
+        <div id="mapscontainer" style="display: block; ">
+            <div id="controls">
+                <div id="mapControls">
+                    <div id="centerEarthButton"></div>
+                    <div id="panControls" class="mapControl">
+                        <div id="move-right" class="mapControl panButton"></div>
+                        <div id="move-left" class="mapControl panButton"></div>
+                        <div id="move-up" class="mapControl panButton"></div>
+                        <div id="move-down" class="mapControl panButton"></div>
+                    </div>
+                    <div id="zoomControls" class="mapControl"> 
+                        <div id="zoom-in" class="mapControl"></div>
+                        <div id="zoom-out" class="mapControl"></div>
+                    </div>
+                    <div id="tiltControls" class="mapControl">
+                        <div id="tilt-up" class="mapControl"></div>
+                        <div id="tilt-down" class="mapControl"></div>
+                    </div>
+                    <div id="rotateControls" class="mapControl">
+                      <div id="north" class="mapControl" style="left: 38px; bottom: 69px; "></div>
+                    </div>
+                </div>
+            </div>
+            <div id="map3d">
+           </div>
+        </div>
+        <div class="copyright">
+            <img id="watermark" src="./WebGlMaps_files/watermark.png">
+            <span class="copyrightText" style="width: 291px;">©2011 Navteq, ©2011 DigitalGlobe All rights reserved</span>
+            <a title="Terms of Use" target="tos" class="copyrightLink blue" href="http://maps.nokia.com/services/terms">Terms of Use</a>
+        </div>
+</body></html>

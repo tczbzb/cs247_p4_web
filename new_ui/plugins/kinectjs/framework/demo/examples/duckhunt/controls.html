@@ -1,0 +1,102 @@
+<!DOCTYPE htmnl>
+<html>
+	<head>
+		<meta name = "viewport" content = "initial-scale = 1.0, maximum-scale = 1.0" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	
+		<title>Kinect Sample Controls</title>
+		
+		<style>
+			body{
+				margin:0;
+				padding:0;
+				background:#999;
+			}
+			#wrap {
+				margin:0 auto;
+				width:100%;
+				width:90%;
+				max-width: 600px;
+			}
+			input{
+				border:2px solid #666666;
+				border-radius:7px;
+				padding:12px;
+				font-size:18px;
+				background:#f2f6f9;
+			}
+			label{
+				display:block;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="wrap">
+			<label for="_port">Input the KinectSocketServer Address (ex: 192.168.1.2:8800)</label>
+			<input type="text" value="Kinect Address" id="_port" />
+			<br />
+			<br />
+			
+			<button id="_back" style="display:block;padding:50px;font-size:30px; width:100%; ">
+				BACK
+			</button>
+			<br /><br />
+			<button id="_fire" style="display:block;padding:80px;font-size:30px; width:100%; height:360px;">
+				FIRE
+			</button>
+			<br />
+		</div>
+		
+		<script type="text/javascript">
+			/***********************************************************/
+			//beacon function
+			function beacon( address, args ) {
+				if( !address )
+					return false;
+				else
+				{
+					if( address.length <= 5 )
+						address = 'localhost:' + address.replace(/\s+/g, '');
+					else
+						address = address.replace(/\s+/g, '');
+				}
+				var img = new Image();
+				img.src = 'http://' + address + '/_button/' + new Date().getTime() + '/?' + args;
+				img = null;
+				
+				return false;
+			}
+			
+			//preventing window movement
+			document.addEventListener('touchmove', function( e ) {
+				e.preventDefault();
+				e.stopPropagation();
+			});
+			/***********************************************************/
+		
+		
+			//two sample buttons (TOUCH EVENTS)
+			if( 'ontouchstart' in document.documentElement )
+			{
+				document.getElementById('_fire').addEventListener( 'touchend', function() {
+					var address = document.getElementById('_port').value;
+					beacon( address, 'action=1' );
+				});
+			}
+			else
+			{	//mouse events
+				document.getElementById('_fire').addEventListener( 'click', function() {
+					var address = document.getElementById('_port').value;
+					beacon( address, 'action=1' );
+				});
+			}
+			
+			document.getElementById('_back').addEventListener( 'click', function() {
+				var address = document.getElementById('_port').value;
+				beacon( address, 'action=0' );
+			});
+		</script>
+	</body>
+</html>

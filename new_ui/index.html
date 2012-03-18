@@ -3,41 +3,66 @@
   <link href="css/geocoders.css" rel="stylesheet" />
 </head>
 <body class="GUnload();">
+  <form id="directions-form" onsubmit="return false;" action="get" style="display: none;">
+    From:<br/>
+    <input type="text" id="from" value="Stanford, CA" onclick="simulateKeyPress(101);"/><br/>
+    To:<br/>
+    <input type="text" id="to" value="Half Moon Bay, CA"/><br/>
+    <input type="submit" onclick="DS_goDirections();" value="Go!" />
+  </form>
   <div id="impress" class="impress-not-supported">
     <div id="AppView_Logo" class="step" data-x="0" data-y="-1500" data-rotate-y="-180">
       <img src="images/geocoders-logo.png" />
     </div>
     <div id="AppView_Input" class="step appView" data-x="0" data-y="0">
-      <div class="appCenteredMessage" style="padding-top: 150px;">
+      <div rel="default" class="appCenteredMessage" style="padding-top: 150px;">
         <img src="images/speech-bubble.gif" />
         <h1>Speak your destination to begin</h1>
         <h2>Go ahead, I'm listening!</h2>
       </div>
+      <div id="AppView_Input_TryAgain" class="appCenteredMessage" style="display: none; padding-top: 150px;">
+        <img src="images/speech-bubble.gif" />
+        <h1>Please speak your destination again</h1>
+        <h2>Go ahead, I'm listening!</h2>
+      </div>
     </div>
     <div id="AppView_Confirm" class="step appView" data-x="1490" data-y="0">
-      <div class="appCenteredMessage">
+      <div rel="default" class="appCenteredMessage">
         <h2>I heard</h2>
         <h1 class="location">"half moon bay"</h1>
         <h2>Is this correct?</h2>
+        <div id="AppView_Confirm_Microphone"></div>
       </div>
       <div id="AppView_Confirm_OK" class="appCenteredMessage" style="display: none;">
         <img src="images/checkmark.png" />
         <h1>Destination Confirmed!</h1>
       </div>
+      <div id="AppView_Confirm_Incorrect" class="appCenteredMessage" style="display: none;">
+        <img src="images/red-x.png" />
+        <h1>Whoops! Let's try again.</h1>
+      </div>
     </div>
-    <div id="AppView_Temp" class="step appView" data-x="2980" data-y="0">
-      <form id="directions-form" onsubmit="return false;" action="get">
-        From:<br/>
-        <input type="text" id="from" value="Stanford, CA" onclick="simulateKeyPress(101);"/><br/>
-        To:<br/>
-        <input type="text" id="to" value="Half Moon Bay, CA"/><br/>
-        <input type="submit" onclick="DS_goDirections();" id="go" value="Go!" onclick="impress().next();"/>
-      </form>
-    </div>
-    <div id="AppView_Fetching" class="step appView" data-x="4470" data-y="0">
-      <div class="appCenteredMessage">
+    <div id="AppView_Fetching" class="step appView" data-x="2980" data-y="0">
+      <div rel="default" class="appCenteredMessage">
         <img src="images/globe.gif" />
         <h1>Calculating route...</h1>
+      </div>
+    </div>
+    <div id="AppView_Help" class="step appView" data-x="4470" data-y="0">
+      <div id="gesture-tips">
+        <div class="tip left">
+          <img src="images/gesture-swipe-to-right.png" />
+          <div class="label">Go Back in Route</div>
+        </div>
+        <div class="tip center">
+          <img src="images/gesture-hand-zoom.png" />
+          <div class="label">Zoom In/Out</div>
+        </div>
+        <div class="tip right">
+          <img src="images/gesture-swipe-to-left.png" />
+          <div class="label">Jump Ahead in Route</div>
+        </div>
+        <div class="title">Swipe Left to Continue</div>
       </div>
     </div>
     <div id="AppView_Earth" class="step appView earthView" data-x="5960" data-y="0">
@@ -64,6 +89,20 @@
         <br/>
         =&gt; - Pick a new destination<br/>
       </div>
+      <div id="gesture-feedback">
+        <div class="left" rel="HAND_LEFT_GESTURE">
+          <img src="images/gesture-swipe-to-right.png" />
+          <div class="label">Go Back in Route</div>
+        </div>
+        <div class="right" rel="HAND_RIGHT_GESTURE">
+          <img src="images/gesture-swipe-to-left.png" />
+          <div class="label">Jump Ahead in Route</div>
+        </div>
+        <div class="center" rel="ZOOM_GESTURE">
+          <img src="images/gesture-hand-zoom.png" />
+          <div class="label">Zoom In/Out</div>
+        </div>
+      </div>
     </div>
   </div>
 </body>
@@ -77,6 +116,9 @@
 <script type="text/javascript" src="js/simulator.js"></script>
 <script type="text/javascript" src="js/index.js"></script>
 <script type="text/javascript" src="plugins/impress-js/js/impress.js"></script>
+<script type="text/javascript" src="plugins/kinectjs/framework/kinect.js"></script>
+<script type="text/javascript" src="plugins/buzz/buzz.js"></script>
+<script type="text/javascript" src="plugins/wami/wami-2.0.js"></script>
 <script>impress();</script>
 
 <!-- Driving Simulator/Directions -->
@@ -151,7 +193,7 @@ function DS_init() {
 }
 google.setOnLoadCallback(DS_init);
 
-var isDriving = false;
+
 var KeyCodes = {
   BACKSPACE:     8,
   TAB:           9,
@@ -224,16 +266,13 @@ var KeyCodes = {
 function DS_activateKeyListeners() {
   $(document).keyup(function(e) {
     var keyCode = e.which;
-    console.log('keyup event fired: ' + keyCode);
     switch (keyCode) {
       // Start Driving
       case KeyCodes.SPACE:
-        if (isDriving) {
-          DS_controlSimulator('pause');
-          isDriving = false;
+        if (!GA.Earth.isDriving) {
+          GA.Earth.startDriving();
         } else {
-          DS_controlSimulator('start');
-          isDriving = true;
+          GA.Earth.pauseDriving();
         }
         break;
       case KeyCodes.DIGIT_1:
@@ -243,6 +282,34 @@ function DS_activateKeyListeners() {
         DS_controlSimulator('faster');
         break;
       
+      
+      // Temporary: Controls to switch between views
+      case KeyCodes.LEFT_ARROW:
+        GA.Views.showPreviousView();
+        break;
+      case KeyCodes.RIGHT_ARROW:
+        GA.Views.showNextView();
+        break;
+        
+      case KeyCodes.LETTER_Y:
+        if (GA.Views.getCurrentView().attr('id') == 'AppView_Confirm') {
+          GA.Views.showCenteredMessage('AppView_Confirm', 'AppView_Confirm_OK', function() {
+            GA.Views.showNextView();
+            setTimeout("DS_goDirections();", 1000);
+          }, 750);
+          GA.Audio.REPORT_DESTINATION_CONFIRMED.play();
+        }
+        break;
+      case KeyCodes.LETTER_N:
+        if (GA.Views.getCurrentView().attr('id') == 'AppView_Confirm') {
+          GA.Views.showCenteredMessage('AppView_Confirm', 'AppView_Confirm_Incorrect', function() {
+            GA.Views.showCenteredMessage('AppView_Input', 'AppView_Input_TryAgain', null, 0);
+            GA.Views.showPreviousView();
+          }, 750);
+          GA.Audio.REPORT_DESTINATION_WHOOPS.play();
+        }
+        break;
+      /*
       // Moving
       case KeyCodes.LETTER_T:
         DS_move('forward');
@@ -256,7 +323,9 @@ function DS_activateKeyListeners() {
       case KeyCodes.LETTER_H:
         DS_move('right');
         break;
-    
+      */
+      
+      /*
       // Turning
       case KeyCodes.LETTER_I:
         DS_rotateCamera('up');
@@ -270,20 +339,32 @@ function DS_activateKeyListeners() {
       case KeyCodes.LETTER_L:
         DS_rotateCamera('right');
         break;
-        
+      */
+      
+      // Zooming
+      case KeyCodes.DIGIT_9:
+        GA.Earth.zoomIn();
+        break;
+      case KeyCodes.DIGIT_0:
+        GA.Earth.zoomOut();
+        break;
+      
       // Google Earth View: Cycle Between Steps  
       case KeyCodes.LETTER_Z:
-        DS_previousStep();
+        if (!GA.Earth.isDriving) {
+          GA.Earth.showPreviousStep();
+        }
         break;
       case KeyCodes.LETTER_X:
-        DS_nextStep();
+        if (!GA.Earth.isDriving) {
+          GA.Earth.showNextStep();
+        }
         break;
     }
   });
 }
 
 $(document).ready(function() {
-  setTimeout("impress().next()", 2000);
   GA.init();
 });
 
@@ -296,12 +377,73 @@ $(document).ready(function() {
 var GeocodersApp = GA = {
   
   init: function() {
+    GA.Audio.init();
     GA.Views.init();
+    GA.Gestures.init();
+  },
+  
+  Audio: {
+    // Playable sounds (call GA.Audio.VAR_NAME.play() to play them).
+    PROMPT_FOR_DESTINATION      : new buzz.sound('sounds/prompt_for_destination.mp3'),
+    PROMPT_STILL_LISTENING      : new buzz.sound('sounds/prompt_still_listening.mp3'),
+    PROMPT_CONFIRM_DESTINATION  : new buzz.sound('sounds/prompt_confirm_destination.mp3'),
+    REPORT_DESTINATION_CONFIRMED: new buzz.sound('sounds/report_destination_confirmed.mp3'),
+    REPORT_DESTINATION_WHOOPS   : new buzz.sound('sounds/report_destination_whoops.mp3'),
+    REPORT_CALCULATING_ROUTE    : new buzz.sound('sounds/report_calculating_route.mp3'),
+    REPORT_GESTURE_EXPLANATION  : new buzz.sound('sounds/report_gesture_explanation.mp3'),
+    REPORT_ROUTE_OVERVIEW       : new buzz.sound('sounds/report_route_overview.mp3'),
+    REPORT_TURN_APPROACHING     : new buzz.sound('sounds/report_turn_approaching.mp3'),
+    EFFECT_SWOOSH               : new buzz.sound('sounds/effect_swoosh.mp3'),
+    EFFECT_ZOOM_IN              : new buzz.sound('sounds/effect_zoom_in.mp3'),
+    EFFECT_ZOOM_OUT             : new buzz.sound('sounds/effect_zoom_out.mp3'),
+    
+    // Constants
+    WAIT_TIME_BEFORE_PLAYING      : 750, // milliseconds
+    WAIT_TIME_BEFORE_REPROMPTING  : 8000, // milliseconds
+    
+    // Speech Recognition Grammars
+    /*YES_NO_RESPONSE_GRAMMAR: {
+      language : 'en-us',
+      grammar : '#JSGF V1.0;' + 
+                'grammar EnglishSandboxExample;' + 
+                
+                'public <top> = (<response>)+;' + 
+                
+                '<response> = <affirmative> | <negative>;' + 
+                '<affirmative> = yes | yep  | yeah | sure;' + 
+                '<negative>    = no  | nope | nah  | naw;',
+      type : 'jsgf',
+      aggregate : false,
+      incremental : true
+    },
+    
+    // Wami App
+    wamiApp: null,*/
+    
+    init: function() {
+      // A typical Wami.App might specify these parameters 
+      // (additional options are described below)
+      /*var options = {
+        guiID : 'AppView_Confirm_Microphone',
+        devKey : '0993b9ca66507abba68074bb28867d27',  // for http://www.cmslewis.com/cs247/final_project
+        grammar : GA.Audio.YES_NO_RESPONSE_GRAMMAR,
+        onReady : function() {alert('ready!');},
+        onRecognition : function(result) {
+          GA.Audio.wamiApp.stop();
+          GA.Audio.wamiApp.playback();
+          alert('i heard: ' + result);
+        }
+      };
+      
+      GA.Audio.wamiApp = new Wami.App(options);*/
+    }
   },
   
   Views: {
     init: function() {
+      currentViewID = $('#impress .step').first().attr('id');
       this.initView('AppView_Confirm');
+      this.initView('AppView_Earth');
     },
     initView: function(viewID) {
       var self = this;
@@ -315,25 +457,28 @@ var GeocodersApp = GA = {
         return;
       } else {
         // If the view was found, take appropriate action based on the view ID.
-        if (viewID == 'AppView_Confirm') {
-          $view.click(function() {
-            GA.Views.showCenteredMessage(viewID, 'AppView_Confirm_OK', self.showNextView, 750);
-          });
-        }
+        // (this functionality was moved to runViewBehaviors...)
       }
     },
+    getCurrentView: function() {
+      return $('#impress .step.active');
+    },
     showPreviousView: function() {
-      //impress().next();
-      //if (GA.views.currentView <= 0) return;
+      // Reset the current view.
+      var curViewID = GA.Views.getCurrentView().attr('id');
+      setTimeout("GA.Views.showDefaultMessage('" + curViewID + "')", 2000);
+      
       impress().prev();
-      //GA.Views.currentView -= 1;
-      //GA.Views.currentViewID = $('#AppViews .step')[GA.Views.currentView].id;
+      GA.Views.runViewBehaviors();
     },
     showNextView: function() {
+      // Reset the current view.
+      var curViewID = GA.Views.getCurrentView().attr('id');
+      setTimeout("GA.Views.showDefaultMessage('" + curViewID + "')", 2000);
+      
+      // Transition to the next view.
       impress().next();
-      //$('body').animate({scrollLeft: GA.Views.VIEW_WIDTH * (GA.Views.currentView + 1)}, 500);
-      //GA.Views.currentView += 1;
-      //GA.Views.currentViewID = $('#AppViews .step')[GA.Views.currentView].id;
+      GA.Views.runViewBehaviors();
     },
     showCenteredMessage: function(viewID, messageID, callbackFunc, callbackDelay) {
       // Try to get the desired view. Throw an error if it was not found.
@@ -356,7 +501,7 @@ var GeocodersApp = GA = {
       }
       
       // Hide all other messages on this view.
-      $view.find('.appCenteredMessage:visible').fadeOut('fast');
+      $view.find('.appCenteredMessage').fadeOut('fast');
       
       // Show the new message with a nice animation.
       $message.css({'top': '50px', 'opacity': 0.0});
@@ -365,15 +510,268 @@ var GeocodersApp = GA = {
         top: '-=50',
         opacity: '1'
       }, function() {
-        // Execute the callback function after the desired delay.
+        if (!callbackFunc) return false;
+        
+        // Execute the callback function (if there is one) after the desired delay.
         if (callbackDelay && callbackDelay > 0) {
           setTimeout(callbackFunc, callbackDelay);
         } else {
           setTimeout(callbackFunc, 0);
         }
       });
+    },
+    showDefaultMessage: function(viewID) {
+      $view = $('#' + viewID);
+      $view.find('.appCenteredMessage').hide();
+      $view.find('.appCenteredMessage[rel="default"]').show();
+    },
+    runViewBehaviors: function() {
+      // Get the current view ID.
+      var newViewID = GA.Views.getCurrentView().attr('id');
+      
+      // Run any necessary functionality when this view is displayed.
+      if (newViewID == 'AppView_Input') {
+        setTimeout("GA.Audio.PROMPT_FOR_DESTINATION.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING); // wait for the view transition animation to finish
+        
+        // Prompt again after a few seconds.
+        setTimeout(function() {
+          if (GA.Views.getCurrentView().attr('id') == 'AppView_Input') {
+            GA.Audio.PROMPT_STILL_LISTENING.play();
+          }
+        }, GA.Audio.WAIT_TIME_BEFORE_REPROMPTING);
+        
+      } else if (newViewID == 'AppView_Confirm') {
+        setTimeout("GA.Audio.PROMPT_CONFIRM_DESTINATION.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING);
+        //GA.Audio.wamiApp.record();
+        
+      } else if (newViewID == 'AppView_Fetching') {
+        setTimeout("GA.Audio.REPORT_CALCULATING_ROUTE.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING);
+        
+      } else if (newViewID == 'AppView_Help') {
+        setTimeout("GA.Audio.REPORT_GESTURE_EXPLANATION.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING);
+        
+      } else if (newViewID == 'AppView_Earth') {
+        setTimeout("GA.Audio.REPORT_ROUTE_OVERVIEW.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING);
+        
+      }
     }
-  }  
+  },
+  
+  Gestures: {
+    // Constants
+    MS_TO_ENFORCE_BETWEEN_GESTURES: 750,
+  	RECENT_COORDS_CACHE_SIZE: 10,
+  	
+  	// Cache
+  	coordsCache: {
+  		'RIGHT_HAND': []
+  	},
+  	
+  	// Functions
+  	init: function() {
+  		var GAG = GA.Gestures; // 'GAG' stands for GA.Gestures
+  		  
+    	kinect.setUp({
+  			players	 : 1,
+  			joints   : [ 'RIGHT_HAND', 'LEFT_HAND', 'HANDS_DIST'],
+  			gestures : [ 'SWIPE', 'HANDS_DIST' /*, There is also a custom zoom gesture */ ]
+  		}).sessionPersist()
+  		  .modal.make();
+  		
+  		// Swipe Listener.
+  		kinect.addEventListener( 'gestureSwipe', function( args ) {
+  			// args = array, 0 --> player index, 1 --> joint, 2 --> direction
+  			if (args[0] !== 0) return false;
+			
+			  // Do nothing if the earth is already animating.
+  			if (GA.Earth.isAnimating) return false;
+  			
+  			if (args[1] === 11) {
+  			  var curViewID = GA.Views.getCurrentView().attr('id');
+  			  switch (args[2]) {
+  					case 'left':
+  					  if (curViewID == 'AppView_Help') {
+			          GA.Audio.EFFECT_SWOOSH.play();
+    					  GA.Views.showNextView();
+					    } else if (curViewID == 'AppView_Earth') {
+					      GA.Earth.showNextStep();
+              }
+  						break;
+  					case 'right':
+  					  if (curViewID == 'AppView_Earth') {
+  					    GA.Earth.showPreviousStep();
+              }
+  						break;
+  				}
+  			}
+		  
+  		});
+  		
+  		// Zoom Listener.
+  		kinect.onMessage( function( args ) {
+  			// Return if we aren't on the map view.
+  		  if (GA.Views.getCurrentView().attr('id') != 'AppView_Earth') return;
+  		  
+  		  GAG.cacheCoords(this.coords);
+  			var right_hand = this.coords[0][0];
+  			//console.log("x: " + right_hand.x + " y:" + right_hand.y + " z:" + right_hand.z);
+  			
+  			// Do nothing if the earth is already animating.
+  			if (GA.Earth.isAnimating) return false;
+  			
+  			// Look for a zoom in/out gesture, and handle it accordingly.
+  			if (GAG.isZoomInGesture(this.coords)) {
+  			  GA.Earth.zoomIn();
+  			} else if (GAG.isZoomOutGesture(this.coords)) {
+  			  GA.Earth.zoomOut();
+  			}
+  		});
+  	  
+  		// Driving Listener (for driving simulation only--this gesture would probably not be needed
+  		// in an actual car).
+  		kinect.addEventListener('gestureCrank_ON', function( count ) {
+  		  var curViewID = GA.Views.getCurrentView().attr('id');
+  			if (curViewID == 'AppView_Earth' && !GA.Earth.isDriving) {
+  		    GA.Earth.startDriving();
+		    }
+		  });
+		  kinect.addEventListener('gestureCrank_OFF', function( count ) {
+		    var curViewID = GA.Views.getCurrentView().attr('id');
+  			if (curViewID == 'AppView_Earth' && GA.Earth.isDriving) {
+		      GA.Earth.pauseDriving();
+	      }
+	    });
+		},
+  	cacheCoords: function(coords) {
+  		var rightHandCoords = coords[0][0];
+  		this.coordsCache['RIGHT_HAND'].push(rightHandCoords);
+  		if (this.coordsCache['RIGHT_HAND'].length > this.RECENT_COORDS_CACHE_SIZE) {
+  			// Remove the first element from the array.
+  			this.coordsCache['RIGHT_HAND'].splice(0, 1);
+  		}
+  	},
+  	isZoomInGesture: function(coords) {
+  		var GAG = GA.Gestures;
+  		var right_hand = coords[0][0];
+  		
+  		// Check current right hand coordinates.
+  		var currCoordsSuggestZoom = (
+  			// (true if the right hand is held straight out in front of the body,
+  			// with arm extended parallel to the floor)
+  			right_hand.z > 40 &&
+  			right_hand.y > 40 &&
+  			(-20 >= right_hand.x && right_hand.x >= -50)
+  		);
+  		
+  		// Return immediately if we can, so we don't waste computing time.
+  		if (!currCoordsSuggestZoom) return false;
+  		
+  		// Check whether recent right hand coordinates suggest a zooming motion.
+  		var rh_cache   = GAG.coordsCache['RIGHT_HAND'];
+  		var lastCoord  = rh_cache[0];
+  		var olderCoord = rh_cache[rh_cache.length - 1];
+  		
+  		var dx = olderCoord.x - lastCoord.x; // total change in x for right hand
+  		var dy = olderCoord.y - lastCoord.y; // total change in y for right hand
+  		var dz = olderCoord.z - lastCoord.z; // total change in z for right hand
+  		
+  		var prevCoordsSuggestZoom = (Math.abs(dx) <= 10 && Math.abs(dy) <= 10);
+  		//alert("x: " + dx + " y: " + dy + " z: " + dz + " => " + prevCoordsSuggestZoom);
+  		
+  		return (
+  			currCoordsSuggestZoom &&
+  			prevCoordsSuggestZoom
+  		);
+  	},
+  	isZoomOutGesture: function (coords) {
+  		var GAG = GA.Gestures;
+  		var right_hand = coords[0][0];
+  		
+  		// Check current right hand coordinates.
+  		var currCoordsSuggestZoom = (
+  			// (true if the right hand is held straight out in front of the body,
+  			//	with arm retracted close to the torso)
+  			right_hand.z < 15 &&
+  			right_hand.y > 40 &&
+  			(-20 >= right_hand.x && right_hand.x >= -50)
+  		);
+  		
+  		// Return immediately if we can, so we don't waste computing time.
+  		if (!currCoordsSuggestZoom) return false;
+  		
+  		// Check whether recent right hand coordinates suggest a zooming motion.
+  		var rh_cache   = GAG.coordsCache['RIGHT_HAND'];
+  		var lastCoord  = rh_cache[0];
+  		var olderCoord = rh_cache[rh_cache.length - 1];
+  		
+  		var dx = olderCoord.x - lastCoord.x; // total change in x for right hand
+  		var dy = olderCoord.y - lastCoord.y; // total change in y for right hand
+  		var dz = olderCoord.z - lastCoord.z; // total change in z for right hand
+  		
+  		var prevCoordsSuggestZoom = (Math.abs(dx) <= 10 && Math.abs(dy) <= 10);
+  		//alert("x: " + dx + " y: " + dy + " z: " + dz + " => " + prevCoordsSuggestZoom);
+  		
+  		return (
+  			currCoordsSuggestZoom &&
+  			prevCoordsSuggestZoom
+  		);
+  	},
+    flashGestureFeedback: function(gestureID) {
+      $('#gesture-feedback > div').hide();
+      var fadeTime_ms = GA.Gestures.MS_TO_ENFORCE_BETWEEN_GESTURES / 4;
+      var delayTime_ms = GA.Gestures.MS_TO_ENFORCE_BETWEEN_GESTURES / 2;
+      $('#gesture-feedback > div[rel="' + gestureID + '"]').fadeIn(fadeTime_ms).delay(delayTime_ms).fadeOut(fadeTime_ms);
+    }
+	},
+  
+  Earth: {
+    isDriving:   false,
+    isAnimating: false,
+    
+    startDriving: function() {
+      DS_controlSimulator('start');
+      GA.Earth.isDriving = true;
+    },
+    pauseDriving: function() {
+      DS_controlSimulator('pause');
+      GA.Earth.isDriving = false;
+    },
+    showPreviousStep: function() {
+      // Play a sound effect.
+		  GA.Audio.EFFECT_SWOOSH.play();
+		  
+		  // Move to the previous step on the map.
+		  GA.Earth.isAnimating = true;
+			GA.Gestures.flashGestureFeedback('HAND_LEFT_GESTURE');
+      DS_previousStep();
+      setTimeout("GA.Earth.isAnimating = false;", GA.Gestures.MS_TO_ENFORCE_BETWEEN_GESTURES);
+    },
+    showNextStep: function() {
+      // Play a sound effect.
+		  GA.Audio.EFFECT_SWOOSH.play();
+		  
+		  // Move to the next step on the map.
+      GA.Earth.isAnimating = true;
+			GA.Gestures.flashGestureFeedback('HAND_RIGHT_GESTURE');
+      DS_nextStep();
+      setTimeout("GA.Earth.isAnimating = false;", GA.Gestures.MS_TO_ENFORCE_BETWEEN_GESTURES);
+    },
+    zoomIn: function() {
+      // Zoom in on the current location.
+			GA.Earth.isAnimating = true;
+			GA.Gestures.flashGestureFeedback('ZOOM_GESTURE');
+      DS_zoomIn();
+      setTimeout("GA.Earth.isAnimating = false;", GA.Gestures.MS_TO_ENFORCE_BETWEEN_GESTURES);
+    },
+    zoomOut: function() {
+      // Zoom out from the current location.
+		  GA.Earth.isAnimating = true;
+			GA.Gestures.flashGestureFeedback('ZOOM_GESTURE');
+      DS_zoomOut();
+      setTimeout("GA.Earth.isAnimating = false", GA.Gestures.MS_TO_ENFORCE_BETWEEN_GESTURES);
+    }
+    
+  }
 };
 
 </script>

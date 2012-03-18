@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!-- 
+	ORIGINAL CODE : http://mattsurabian.com/duckhunt/ 
+	
+	DUCK HUNT JS - MIT License
+	created by Matthew Surabian
+	http://mattsurabian.com/duckhunt
+	
+	https://github.com/MattSurabian/DuckHunt-JS
+-->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Duck Hunt JS</title>
+<meta name="description" content="It&#39;s Duck Hunt with HTML5 and JS that allows you to create your own levels.">
+<link rel="shortcut icon" href="http://mattsurabian.com/duckhunt/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" type="text/css" href="./index_files/style.css">
+<script src="./index_files/jquery.js"></script>
+<script src="./index_files/jquery.color.js"></script>
+<script src="./index_files/duckhunt.js"></script>
+<script src="../../../kinect.js"></script>
+<script src="./index_files/jquery.spritely-0.6.js" type="text/javascript"></script>
+</head>
+<body>
+
+
+
+<script type="text/javascript">
+(function( kinect ) {
+
+	if( !window.console )
+	{
+		window.console = {
+			log : function() {}
+		};
+	}
+
+	var cursor;
+	
+	//on dom load
+	document.addEventListener( 'DOMContentLoaded', function() {
+		//kinect setup
+		kinect.setUp({
+				players  	: 1,				//num of players
+				relative 	: true,				//tracking mode
+				meters	 	: false,			//tracking mode continued
+				sensitivity : 1.2,				//semsitivity
+				joints	 	: [ 'HAND_RIGHT', 'HAND_LEFT' ],	//tracked nodes
+				gestures 	: [ 'HANDS_DIST' ]					//tracked gestures
+			})
+			.sessionPersist()	//keep the session between page loads (of the same domain)
+			.modal.make( '../../../knctModal.css' )		//kickstarting the modal						
+			.notif.make();		//kickstarting the notifications
+			
+		//CURSOR
+		cursor = kinect.cursor.make()			//constructing the cursor
+					.useSmoothing( 2 )			//use a bit of smoothing
+					.useBothHands( true )		//use both hands (if available)
+					.action( 'z-axis', -45 )	//z-axis percent, when should the kinectTouch events be dispatched
+					.activate();				//kickstarting the cursor
+					
+		//adding notifications on connection status
+		kinect.addEventListener('openedSocket', function() { this.notif.push( "CONNECTED" ); });
+		kinect.addEventListener('closedSocket', function() { this.notif.push( "DISCONNECTED" ) });
+
+		//adding notifications on player detection/loss
+		kinect.addEventListener('playerFound', function( count ) { this.notif.push( "PLAYER FOUND. Total : " + count[ 0 ] ) });
+		kinect.addEventListener('playerLost', function( count ) { this.notif.push( "PLAYER LOST. Total : " + count[ 0 ] ) });
+			
+		//init message
+		kinect.notif.push( "Please use a mobile device and navigate to <a href='controls.html' target='_blank'>./duckhunt/controls.html</a>", 8000 );
+		
+		//checking to see if we hit a duck (callback from mobile button press)
+		kinect.addEventListener( 'externalButtonPress', function( args ) {
+			var cache = kinect.cursor;
+			var len = window.duck.length;
+			
+			var cacheX = ( cache.x / 100 ) * 900;
+			var cacheY = ( cache.y / 100 ) * 500;
+
+			if( args.indexOf( 'action=1' ) !== -1 )
+			{
+				while( len-- )
+				{
+					var top = parseInt( $( window.duck[len] ).css('top').replace('px', '') );
+					var left = parseInt( $( window.duck[len] ).css('left').replace('px', '') );
+
+					if( Math.abs( cacheY  - top ) < 40 && Math.abs( cacheX - left ) < 72 )
+					{
+						console.log( "HIT ");
+						theGame.shootDuck( $( window.duck[len] ) );
+						return false;
+					}
+				}
+				theGame.shootGun();
+			}
+			else if( args.indexOf( 'action=0' ) !== -1 )
+				history.back();
+
+			return false;
+		});
+		
+		//escaping
+		kinect.addEventListener( 'gestureEscape', function( count ) {
+			if( count[ 0 ] !== 0 )
+				return false;
+				
+			if( count[ 1 ] === true )
+			{
+				kinect.notif.push( "ESCAPE..." );
+				window.escape = setTimeout(function() {
+					history.back();
+				},1800);
+			}
+			else
+			{
+				clearTimeout( window.escape );
+				window.escape = false;
+			}
+			
+			return false;
+		});
+	
+	}, false );
+})( kinect );					
+</script>
+
+
+<div id="gameField" style="background-color: rgb(100, 176, 255); ">
+
+
+<div id="game"><div id="theFlash"></div><div id="tree"></div><div id="grass"></div><div id="theDog" style="bottom: -10px; background-position: -276px 0px; "></div><div id="sniffDog" style="left: 240px; background-image: url(http://mattsurabian.com/duckhunt/images/jumpDog.png); bottom: 75px; display: none; background-position: 0px 0px; "></div><div id="theDuck10" class="deadDuck" style="top: -200px; left: 460px; background-position: 0px -73px; "></div><div id="theDuck11" class="deadDuck" style="top: -200px; left: 460px; background-position: 0px -73px; "></div></div>
+<div class="gameinfo" id="ammo" style="display: block; "><strong>Shots: </strong><img src="./index_files/bullet.png" align="absmiddle"><img src="./index_files/bullet.png" align="absmiddle"><img src="./index_files/bullet.png" align="absmiddle"></div>
+<div class="gameinfo" id="waves" style="display: block; ">WAVE 3 of 3</div>
+<div class="gameinfo" id="ducksKilled" style="display: block; "><img src="./index_files/duckLive.png"><img src="./index_files/duckLive.png"><img src="./index_files/duckLive.png"><img src="./index_files/duckLive.png"><img src="./index_files/duckLive.png"><img src="./index_files/duckLive.png"></div>
+<div class="gameinfo" id="scoreboard" style="display: block; ">0</div>
+<div id="loser" class="messages" style="display: block; ">
+Are you kidding me with that?
+<br>
+</div>
+
+
+<div id="winner" class="messages" style="display: none; ">
+You are a champion!  
+</div>
+
+
+<div id="level" class="messages" style="display: none; ">Level 1</div>
+
+</div>
+</body></html>

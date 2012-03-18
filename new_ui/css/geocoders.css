@@ -116,17 +116,24 @@ body button {
   text-shadow: 0 1px 0 white;
   text-transform: uppercase;
 }
-.appView.earthView {
+
+#AppView_Earth {
+  background: none;
   border: none;
+  box-shadow: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
 }
 #earth {
-  height: 100%;
-  width: 100%;
+  float: left;
+  height: 690px;
+  margin-right: 8px;
+  width: 1076px;
 }
 #map {
-  display: none;
-  height: 100%;
-  width: 100%;
+  float: left;
+  height: 690px;
+  width: 356px;
 }
 #route-details {
   bottom: 0;
@@ -143,9 +150,9 @@ body button {
   height: 105px;
   left: 0;
   list-style: none;
-  padding: 0 50px;
+  /*padding: 0 50px;*/
   position: absolute;
-  width: 1340px;
+  width: 1440px;
 }
 #route-details li .dirStepContent {
   background: white;
@@ -169,7 +176,7 @@ body button {
   font-size: 30px;
   height: 105px;
   text-shadow: 0 1px 0 white;
-  width: 1340px;
+  width: 1440px;
 }
 #route-details.onTop {
   bottom: auto;
@@ -199,6 +206,98 @@ body button {
   text-align: right;
   vertical-align: middle;
 }
+
+/* Gesture Tips */
+#gesture-tips {
+  background: url('../images/overlay-bg.png') repeat;
+  bottom: 0;
+  left: 0;
+  padding-top: 80px;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  top: 0;
+  z-index: 2;
+}
+#gesture-tips .title {
+  background: white;
+  background-image: -webkit-linear-gradient(bottom, rgb(232,232,232) 0%, rgb(248,248,248) 100%);
+  border: 5px solid #00baff;
+  box-shadow: 0 -2px 10px black, inset 0 1px 0 white;
+  color: #333;
+  display: inline-block;
+  font-size: 45px;
+  font-weight: bold;
+  margin: 50px 300px 0;
+  padding: 30px;
+  text-shadow: 0 1px 0 white;
+  width: 526px;
+}
+#gesture-tips .tip {
+  background: black;
+  border: 1px solid #333;
+  border-radius: 0;
+  box-shadow: 0 0 10px black;
+  color: white;
+  float: left;
+  font-weight: bold;
+  font-size: 45px;
+  margin: 0 21px;
+  padding: 30px;
+  text-align: center;
+  text-shadow: 0 2px 5px black;
+}
+#gesture-tips .tip.left,
+#gesture-tips .tip.right {
+  min-height: 422px;
+  width: 291px;
+}
+#gesture-tips .tip .label {
+  line-height: 1.2;
+  margin-top: 20px;
+}
+
+/* Gesture Feedback (Earth View) */
+#gesture-feedback {
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+#gesture-feedback > div {
+  background: url('../images/overlay-bg.png');
+  border: 1px solid black;
+  box-shadow: 0 0 10px black, inset -1px -1px 0px #333, inset 1px -1px 0px #333;
+  color: white;
+  display: none;
+  font-weight: bold;
+  padding: 20px;
+}
+#gesture-feedback > div img {
+  height: 200px;
+}
+#gesture-feedback > div .label {
+  line-height: 1.2;
+  margin-top: 10px;
+}
+#gesture-feedback > .left {
+  border-bottom-right-radius: 15px;
+  float: left;
+}
+#gesture-feedback > .right {
+  border-bottom-left-radius: 15px;
+  float: right;
+}
+#gesture-feedback > .center {
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  margin-left: -200px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 400px;
+}
+
 
 /* Temporary */
 #directions-form {
