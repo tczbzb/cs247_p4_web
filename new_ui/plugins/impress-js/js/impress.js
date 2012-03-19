@@ -321,6 +321,12 @@
             //}
         };
         
+        var skipOne = function() {
+          var next = steps.indexOf( active ) + 2;
+          next = next < steps.length ? steps[ next ] : steps[ 1 ];
+          return goto(next);
+        };
+        
         window.addEventListener("hashchange", function () {
             goto( getElementFromUrl() );
         }, false);
@@ -337,7 +343,8 @@
         return (roots[ "impress-root-" + rootId ] = {
             goto: goto,
             next: next,
-            prev: prev
+            prev: prev,
+            skipOne: skipOne
         });
 
     }

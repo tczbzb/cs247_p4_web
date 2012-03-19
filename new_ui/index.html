@@ -17,7 +17,7 @@
           <input type="text" id="to" x-webkit-speech="x-webkit-speech" /><br/>
         </form>
       </div>
-      <div id="AppView_Input_TryAgain" class="appCenteredMessage" style="display: none; padding-top: 150px;">
+      <!--<div id="AppView_Input_TryAgain" class="appCenteredMessage" style="display: none; padding-top: 150px;">
         <img src="images/speech-bubble.gif" />
         <h1>Please speak your destination again</h1>
         <h2>Go ahead, I'm listening!</h2>
@@ -25,7 +25,7 @@
           <input type="text" id="from-tryagain" value="My Location"/><br/>
           <input type="text" id="to-tryagain" x-webkit-speech="x-webkit-speech" /><br/>
         </form>
-      </div>
+      </div>-->
     </div>
     <div id="AppView_Confirm" class="step appView" data-x="1490" data-y="0">
       <div rel="default" class="appCenteredMessage">
@@ -290,6 +290,9 @@ function DS_activateKeyListeners() {
         GA.Views.showPreviousView();
         break;
       case KeyCodes.RIGHT_ARROW:
+        if (GA.Views.getCurrentView().attr('id') == 'AppView_Earth') {
+          GA.Earth.pauseDriving();
+        }
         GA.Views.showNextView();
         break;
         
@@ -305,9 +308,8 @@ function DS_activateKeyListeners() {
       case KeyCodes.LETTER_N:
         if (GA.Views.getCurrentView().attr('id') == 'AppView_Confirm') {
           GA.Views.showCenteredMessage('AppView_Confirm', 'AppView_Confirm_Incorrect', function() {
-            GA.Views.showCenteredMessage('AppView_Input', 'AppView_Input_TryAgain', null, 0);
             GA.Views.showPreviousView();
-          }, 750);
+          }, 1000);
           GA.Audio.REPORT_DESTINATION_WHOOPS.play();
         }
         break;
@@ -413,6 +415,8 @@ var GeocodersApp = GA = {
     VOICE_INPUT_WAIT_TIME_MS: 6000,
     ALERT_MESSAGE_DISPLAY_TIME_MS: 750,
     
+    userNeedsOnboarding: true,
+    
     init: function() {
       currentViewID = $('#impress .step').first().attr('id');
       this.initView('AppView_Input');
@@ -436,12 +440,6 @@ var GeocodersApp = GA = {
         $('#AppView_Input #to, #AppView_Input #to-tryagain').click(function() {
           setTimeout(function() {
             var destinationVoiceInput = $('#to').val();
-            if (destinationVoiceInput == '') {
-              // Get the input from the "Try Again" subview.
-              destinationVoiceInput = $('#to-tryagain').val();
-              $('#to').val(destinationVoiceInput);
-            }
-            
             $('#AppView_Confirm .location span').text(destinationVoiceInput);
             
             GA.Views.showNextView();
@@ -494,8 +492,17 @@ var GeocodersApp = GA = {
       var curViewID = GA.Views.getCurrentView().attr('id');
       setTimeout("GA.Views.showDefaultMessage('" + curViewID + "')", 2000);
       
-      // Transition to the next view.
-      impress().next();
+      if (GA.Views.getCurrentView().attr('id') == 'AppView_Fetching') {
+        // Only show the gesture help screen the first time.
+        if (GA.Views.userNeedsOnboarding) {
+          impress().next();
+        } else {
+          impress().skipOne();
+        }
+      } else {
+        // Transition to the next view.
+        impress().next();
+      }
       GA.Views.runViewBehaviors();
     },
     showCenteredMessage: function(viewID, messageID, callbackFunc, callbackDelay) {
@@ -559,6 +566,7 @@ var GeocodersApp = GA = {
         
       } else if (newViewID == 'AppView_Help') {
         setTimeout("GA.Audio.REPORT_GESTURE_EXPLANATION.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING);
+        GA.Views.userNeedsOnboarding = false;
         
       } else if (newViewID == 'AppView_Earth') {
         setTimeout("GA.Audio.REPORT_ROUTE_OVERVIEW.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING);
