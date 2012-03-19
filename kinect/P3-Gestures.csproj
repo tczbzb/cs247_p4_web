@@ -36,6 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Awesomium.Core, Version=1.6.4.0, Culture=neutral, PublicKeyToken=e1a0d7c8071a5214, processorArchitecture=x86" />
     <Reference Include="Coding4Fun.Kinect.WinForm">
       <HintPath>.\Coding4Fun.Kinect.WinForm.dll</HintPath>
     </Reference>

@@ -488,6 +488,9 @@ function DS_previousStep() {
 // Can only go to the current step's street view for now.
 function zoomInSwitch() {
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+	if (lookAt.getRange() <= 10) {
+		return;
+	}
 	if (lookAt.getRange() < 100) {
 		var step = DS_steps[DS_currentStep];
 		lookAt.set(

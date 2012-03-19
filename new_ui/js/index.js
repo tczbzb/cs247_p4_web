@@ -535,20 +535,28 @@ function DS_previousStep() {
   }
 }
 
-
-
 var inStreetView = false;
 var BUFFER = 20;
 var lastRange = -1;
 
-// Can only go to the current step's street view for now.
 function zoomInSwitch() {
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-	if (lookAt.getRange() < 100) {
+	if (!inStreetView && lookAt.getRange() < 100) {
+		var lat;
+		var lng;
+		// Stay centered on the current step or current car location.
+		if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+			lat = DS_simulator.currentLoc.lat();
+			lng = DS_simulator.currentLoc.lng();
+		} else {
+			lat = DS_steps[DS_currentStep].loc.lat();
+			lng = DS_steps[DS_currentStep].loc.lng();
+		}
+
 		var step = DS_steps[DS_currentStep];
 		lookAt.set(
-			step.loc.lat(),
-			step.loc.lng(),
+			lat,
+			lng,
 			5, // altitude
 			DS_ge.ALTITUDE_RELATIVE_TO_GROUND,
 			DS_geHelpers.getHeading(step.loc, DS_path[step.pathIndex + 1].loc),
@@ -558,51 +566,53 @@ function zoomInSwitch() {
 		lastRange = 10; // same as above
 		DS_ge.getView().setAbstractView(lookAt);
 		inStreetView = true;
+		return true;
 	}
+	return false;
 }
 function DS_zoomIn() {
-	// Get the current view.
-	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-	var currRange = lookAt.getRange();
-	
-	if (lastRange == -1) {
-	  lastRange = currRange;
-	}
-	if (currRange < 50 || currRange > lastRange + BUFFER) {
-	  //console.log('range too close!');
-	  return false; 
+	// Do not zoom in in street view
+	if (inStreetView) {
+		return false;
 	}
 	
-	// Play a sound.
-  GA.Audio.EFFECT_ZOOM_IN.play();
+	if (!zoomInSwitch()) {
+		// Get the current view.
+		var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
+		var currRange = lookAt.getRange();
 	
-	lookAt.setRange(currRange / 2.0);
-	lastRange = currRange / 2.0;
+		if (lastRange == -1) {
+			lastRange = currRange;
+		}
+		if (currRange < 50 || currRange > lastRange + BUFFER) {
+			//console.log('range too close!');
+			return false; 
+		}
 	
-	// Stay centered on the current step or current car location.
-  /*	
-  
-  this was buggy for some reason. caused the map to recenter on the current step marker,
-  even if the DS_simulator was not null.
-  
-  if (DS_simulator != null && DS_simulator.totalDistance > 0) {
-	  lookAt.setLatitude(DS_simulator.currentLoc.lat());
-	  lookAt.setLongitude(DS_simulator.currentLoc.lng());
-  } else {
-    lookAt.setLatitude(DS_steps[DS_currentStep].loc.lat());
-	  lookAt.setLongitude(DS_steps[DS_currentStep].loc.lng());
-  }*/
-  
-	// Update the view in Google Earth.
-	DS_ge.getView().setAbstractView(lookAt);
-	zoomInSwitch();
+		// Play a sound.
+		GA.Audio.EFFECT_ZOOM_IN.play();
 	
+		lookAt.setRange(currRange / 2.0);
+		lastRange = currRange / 2.0;
+	
+		// Stay centered on the current step or current car location.  
+		if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+			lookAt.setLatitude(DS_simulator.currentLoc.lat());
+			lookAt.setLongitude(DS_simulator.currentLoc.lng());
+		} else {
+			lookAt.setLatitude(DS_steps[DS_currentStep].loc.lat());
+			lookAt.setLongitude(DS_steps[DS_currentStep].loc.lng());
+		}
+  
+		// Update the view in Google Earth.
+		DS_ge.getView().setAbstractView(lookAt);
+	}	
 	return true;
 }
 function DS_zoomOut() {
 	// Get the current view.
 	var lookAt = DS_ge.getView().copyAsLookAt(DS_ge.ALTITUDE_RELATIVE_TO_GROUND);
-	var currRange = inStreetView ? 10 : lookAt.getRange();
+	var currRange = inStreetView ? 200 : lookAt.getRange();
 	
 	if (lastRange == -1) {
 	  lastRange = currRange;
@@ -612,29 +622,28 @@ function DS_zoomOut() {
 	}*/
 	
 	// Play a sound.
-  GA.Audio.EFFECT_ZOOM_OUT.play();
-	
-	inStreetView = false;
+	GA.Audio.EFFECT_ZOOM_OUT.play();
 	
 	if (lookAt.getTilt() > 0) {
-		lookAt.setTilt(0);
-		lookAt.setRange(100);
-		
-		// Stay centered on the current step or current car location.
-		if (DS_simulator != null && DS_simulator.totalDistance > 0) {
-  	  lookAt.setLatitude(DS_simulator.currentLoc.lat());
-  	  lookAt.setLongitude(DS_simulator.currentLoc.lng());
-    } else {
-      lookAt.setLatitude(DS_steps[DS_currentStep].loc.lat());
-  	  lookAt.setLongitude(DS_steps[DS_currentStep].loc.lng());
-    }
+		lookAt.setTilt(0);				
 	}
+	
+	// Stay centered on the current step or current car location.
+	if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+		lookAt.setLatitude(DS_simulator.currentLoc.lat());
+		lookAt.setLongitude(DS_simulator.currentLoc.lng());
+	} else {
+		lookAt.setLatitude(DS_steps[DS_currentStep].loc.lat());
+		lookAt.setLongitude(DS_steps[DS_currentStep].loc.lng());
+	}
+	
 	// Zoom out to twice the current range.
 	lookAt.setRange(currRange * 2.0);
 	lastRange = currRange * 2.0;
 	
 	// Update the view in Google Earth.
 	DS_ge.getView().setAbstractView(lookAt);
+	inStreetView = false;
 	
 	return true;
 }
@@ -663,7 +672,7 @@ function DS_move(direction) {
   var rightVec = V3.rotate(localToGlobalFrame[0], localToGlobalFrame[2], -headingAngle);
 	
 	// Calculate strafe/forwards
-	var sideways = 0;
+  var sideways = 0;
   var forward = 0;
   var distanceStep = DS_stepDistanceInMeters + (lookAt.getRange()); // Scale the distance step by the current camera range.
   if (direction == 'right') {
@@ -724,7 +733,7 @@ function DS_rotateCamera(direction) {
   camera.setTilt(Math.min(90, camera.getTilt() + tilt));
   
   // Update the camera view in Google Earth.
-	DS_ge.getView().setAbstractView(camera);
+  DS_ge.getView().setAbstractView(camera);
 }
 function DS_turnUp() {
   DS_rotateCamera('up');
