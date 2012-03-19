@@ -106,6 +106,7 @@ body button {
 }
 .appView h1.location {
   color: #333;
+  margin: 0 100px;
 }
 .appView h2 {
   color: #a0a5aa;
@@ -298,11 +299,33 @@ body button {
   width: 400px;
 }
 
-
 /* Temporary */
-#directions-form {
-  margin-top: 250px;
+.voiceInputForm {
+  margin-top: -300px;
 }
+.voiceInputForm * {
+  display: none;
+}
+.voiceInputForm input[x-webkit-speech="x-webkit-speech"] {
+  background: none;
+  border: none;
+  border-radius: 1px;
+  bottom: 21px;
+  cursor: pointer;
+  display: block;
+  font-size: 6px;
+  height: 5px;
+  margin-right: -2px;
+  outline: none;
+  position: absolute;
+  right: 50%;
+  width: 4px;
+  zoom: 10;
+}
+.voiceInputForm input[x-webkit-speech="x-webkit-speech"]:hover {
+  background: #333;
+}
+
 #temp-shortcuts {
   background: black;
   border-right: 1px solid #444;

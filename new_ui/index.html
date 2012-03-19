@@ -3,13 +3,6 @@
   <link href="css/geocoders.css" rel="stylesheet" />
 </head>
 <body class="GUnload();">
-  <form id="directions-form" onsubmit="return false;" action="get" style="display: none;">
-    From:<br/>
-    <input type="text" id="from" value="Stanford, CA" onclick="simulateKeyPress(101);"/><br/>
-    To:<br/>
-    <input type="text" id="to" value="Half Moon Bay, CA"/><br/>
-    <input type="submit" onclick="DS_goDirections();" value="Go!" />
-  </form>
   <div id="impress" class="impress-not-supported">
     <div id="AppView_Logo" class="step" data-x="0" data-y="-1500" data-rotate-y="-180">
       <img src="images/geocoders-logo.png" />
@@ -19,19 +12,29 @@
         <img src="images/speech-bubble.gif" />
         <h1>Speak your destination to begin</h1>
         <h2>Go ahead, I'm listening!</h2>
+        <form class="voiceInputForm" id="directions-form" action="get">
+          <input type="text" id="from" value="My Location"/><br/>
+          <input type="text" id="to" x-webkit-speech="x-webkit-speech" /><br/>
+        </form>
       </div>
       <div id="AppView_Input_TryAgain" class="appCenteredMessage" style="display: none; padding-top: 150px;">
         <img src="images/speech-bubble.gif" />
         <h1>Please speak your destination again</h1>
         <h2>Go ahead, I'm listening!</h2>
+        <form class="voiceInputForm" action="get">
+          <input type="text" id="from-tryagain" value="My Location"/><br/>
+          <input type="text" id="to-tryagain" x-webkit-speech="x-webkit-speech" /><br/>
+        </form>
       </div>
     </div>
     <div id="AppView_Confirm" class="step appView" data-x="1490" data-y="0">
       <div rel="default" class="appCenteredMessage">
         <h2>I heard</h2>
-        <h1 class="location">"half moon bay"</h1>
+        <h1 class="location">&quot;<span></span>&quot;</h1>
         <h2>Is this correct?</h2>
-        <div id="AppView_Confirm_Microphone"></div>
+        <!--<form class="voiceInputForm" action="get">
+          <input type="text" x-webkit-speech="x-webkit-speech" /><br/>
+        </form>-->
       </div>
       <div id="AppView_Confirm_OK" class="appCenteredMessage" style="display: none;">
         <img src="images/checkmark.png" />
@@ -118,7 +121,6 @@
 <script type="text/javascript" src="plugins/impress-js/js/impress.js"></script>
 <script type="text/javascript" src="plugins/kinectjs/framework/kinect.js"></script>
 <script type="text/javascript" src="plugins/buzz/buzz.js"></script>
-<script type="text/javascript" src="plugins/wami/wami-2.0.js"></script>
 <script>impress();</script>
 
 <!-- Driving Simulator/Directions -->
@@ -386,7 +388,7 @@ var GeocodersApp = GA = {
     // Playable sounds (call GA.Audio.VAR_NAME.play() to play them).
     PROMPT_FOR_DESTINATION      : new buzz.sound('sounds/prompt_for_destination.mp3'),
     PROMPT_STILL_LISTENING      : new buzz.sound('sounds/prompt_still_listening.mp3'),
-    PROMPT_CONFIRM_DESTINATION  : new buzz.sound('sounds/prompt_confirm_destination.mp3'),
+    PROMPT_CONFIRM_DESTINATION  : new buzz.sound('sounds/prompt_confirm_destination_general.mp3'),
     REPORT_DESTINATION_CONFIRMED: new buzz.sound('sounds/report_destination_confirmed.mp3'),
     REPORT_DESTINATION_WHOOPS   : new buzz.sound('sounds/report_destination_whoops.mp3'),
     REPORT_CALCULATING_ROUTE    : new buzz.sound('sounds/report_calculating_route.mp3'),
@@ -398,52 +400,23 @@ var GeocodersApp = GA = {
     EFFECT_ZOOM_OUT             : new buzz.sound('sounds/effect_zoom_out.mp3'),
     
     // Constants
-    WAIT_TIME_BEFORE_PLAYING      : 750, // milliseconds
-    WAIT_TIME_BEFORE_REPROMPTING  : 8000, // milliseconds
-    
-    // Speech Recognition Grammars
-    /*YES_NO_RESPONSE_GRAMMAR: {
-      language : 'en-us',
-      grammar : '#JSGF V1.0;' + 
-                'grammar EnglishSandboxExample;' + 
-                
-                'public <top> = (<response>)+;' + 
-                
-                '<response> = <affirmative> | <negative>;' + 
-                '<affirmative> = yes | yep  | yeah | sure;' + 
-                '<negative>    = no  | nope | nah  | naw;',
-      type : 'jsgf',
-      aggregate : false,
-      incremental : true
-    },
-    
-    // Wami App
-    wamiApp: null,*/
+    WAIT_TIME_BEFORE_PLAYING      : 750,   // milliseconds
+    WAIT_TIME_BEFORE_REPROMPTING  : 10000, // milliseconds
+
     
     init: function() {
-      // A typical Wami.App might specify these parameters 
-      // (additional options are described below)
-      /*var options = {
-        guiID : 'AppView_Confirm_Microphone',
-        devKey : '0993b9ca66507abba68074bb28867d27',  // for http://www.cmslewis.com/cs247/final_project
-        grammar : GA.Audio.YES_NO_RESPONSE_GRAMMAR,
-        onReady : function() {alert('ready!');},
-        onRecognition : function(result) {
-          GA.Audio.wamiApp.stop();
-          GA.Audio.wamiApp.playback();
-          alert('i heard: ' + result);
-        }
-      };
-      
-      GA.Audio.wamiApp = new Wami.App(options);*/
+      // Empty
     }
   },
   
   Views: {
+    VOICE_INPUT_WAIT_TIME_MS: 6000,
+    ALERT_MESSAGE_DISPLAY_TIME_MS: 750,
+    
     init: function() {
       currentViewID = $('#impress .step').first().attr('id');
+      this.initView('AppView_Input');
       this.initView('AppView_Confirm');
-      this.initView('AppView_Earth');
     },
     initView: function(viewID) {
       var self = this;
@@ -455,9 +428,54 @@ var GeocodersApp = GA = {
         // Print an error and return if it does not exist in the DOM.
         console.err('View with ID #' + viewID + ' does not exist');
         return;
-      } else {
-        // If the view was found, take appropriate action based on the view ID.
-        // (this functionality was moved to runViewBehaviors...)
+      }
+      
+      // If the view was found, take appropriate action based on the view ID.
+      // (this functionality was moved to runViewBehaviors...)
+      if ($view.attr('id') == 'AppView_Input') {
+        $('#AppView_Input #to, #AppView_Input #to-tryagain').click(function() {
+          setTimeout(function() {
+            var destinationVoiceInput = $('#to').val();
+            if (destinationVoiceInput == '') {
+              // Get the input from the "Try Again" subview.
+              destinationVoiceInput = $('#to-tryagain').val();
+              $('#to').val(destinationVoiceInput);
+            }
+            
+            $('#AppView_Confirm .location span').text(destinationVoiceInput);
+            
+            GA.Views.showNextView();
+          }, GA.Views.VOICE_INPUT_WAIT_TIME_MS);
+        });
+      } else if ($view.attr('id') == 'AppView_Confirm') {
+        /*$('#AppView_Confirm .voiceInputForm input[x-webkit-speech="x-webkit-speech"]').click(function() {
+          //alert('listening!');
+          setTimeout(function() {
+            var confirmationVoiceInput = $('#AppView_Confirm .voiceInputForm input[x-webkit-speech="x-webkit-speech"]').val().toLowerCase();
+          
+            // Check whether the user gave an affirmative response.
+            var addressIsCorrect = false;
+            if (confirmationVoiceInput in {'yes':'', 'yeah':'','yep':'','ya':'','yeppers':'','indeed':'','indeed it is':'','yes it is':'','absolutely':''}) {
+              addressIsCorrect = true;
+            }
+            
+            if (addressIsCorrect) {
+              // Fetch driving directions.
+              GA.Views.showCenteredMessage('AppView_Confirm', 'AppView_Confirm_OK', function() {
+                GA.Views.showNextView();
+                setTimeout("DS_goDirections();", 1000); // wait for app to transition to next slide
+              }, GA.Views.ALERT_MESSAGE_DISPLAY_TIME_MS);
+              GA.Audio.REPORT_DESTINATION_CONFIRMED.play();
+            } else {
+              // Prompt user for destination again on the previous screen.
+              GA.Views.showCenteredMessage('AppView_Confirm', 'AppView_Confirm_Incorrect', function() {
+                GA.Views.showCenteredMessage('AppView_Input', 'AppView_Input_TryAgain', null, 0);
+                GA.Views.showPreviousView();
+              }, GA.Views.ALERT_MESSAGE_DISPLAY_TIME_MS);
+              GA.Audio.REPORT_DESTINATION_WHOOPS.play();
+            }
+          }, GA.Views.VOICE_INPUT_WAIT_TIME_MS - 3000);
+        });*/
       }
     },
     getCurrentView: function() {
@@ -533,16 +551,8 @@ var GeocodersApp = GA = {
       if (newViewID == 'AppView_Input') {
         setTimeout("GA.Audio.PROMPT_FOR_DESTINATION.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING); // wait for the view transition animation to finish
         
-        // Prompt again after a few seconds.
-        setTimeout(function() {
-          if (GA.Views.getCurrentView().attr('id') == 'AppView_Input') {
-            GA.Audio.PROMPT_STILL_LISTENING.play();
-          }
-        }, GA.Audio.WAIT_TIME_BEFORE_REPROMPTING);
-        
       } else if (newViewID == 'AppView_Confirm') {
         setTimeout("GA.Audio.PROMPT_CONFIRM_DESTINATION.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING);
-        //GA.Audio.wamiApp.record();
         
       } else if (newViewID == 'AppView_Fetching') {
         setTimeout("GA.Audio.REPORT_CALCULATING_ROUTE.play()", GA.Audio.WAIT_TIME_BEFORE_PLAYING);
