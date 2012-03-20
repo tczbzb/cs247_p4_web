@@ -545,7 +545,7 @@ function zoomInSwitch() {
 		var lat;
 		var lng;
 		// Stay centered on the current step or current car location.
-		if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+		if (DS_simulator != null && DS_simulator.totalDistance > 0 && !GA.Earth.isPreviewing) {
 			lat = DS_simulator.currentLoc.lat();
 			lng = DS_simulator.currentLoc.lng();
 		} else {
@@ -596,7 +596,7 @@ function DS_zoomIn() {
 		lastRange = currRange / 2.0;
 	
 		// Stay centered on the current step or current car location.  
-		if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+		if (DS_simulator != null && DS_simulator.totalDistance > 0 && !GA.Earth.isPreviewing) {
 			lookAt.setLatitude(DS_simulator.currentLoc.lat());
 			lookAt.setLongitude(DS_simulator.currentLoc.lng());
 		} else {
@@ -629,7 +629,7 @@ function DS_zoomOut() {
 	}
 	
 	// Stay centered on the current step or current car location.
-	if (DS_simulator != null && DS_simulator.totalDistance > 0) {
+	if (DS_simulator != null && DS_simulator.totalDistance > 0 && !GA.Earth.isPreviewing) {
 		lookAt.setLatitude(DS_simulator.currentLoc.lat());
 		lookAt.setLongitude(DS_simulator.currentLoc.lng());
 	} else {

@@ -745,16 +745,20 @@ var GeocodersApp = GA = {
   Earth: {
     isDriving:   false,
     isAnimating: false,
+    isPreviewing: false,
     
     startDriving: function() {
       DS_controlSimulator('start');
       GA.Earth.isDriving = true;
+      GA.Earth.isPreviewing = false;
     },
     pauseDriving: function() {
       DS_controlSimulator('pause');
       GA.Earth.isDriving = false;
     },
     showPreviousStep: function() {
+      GA.Earth.isPreviewing = true;
+      
       // Play a sound effect.
 		  GA.Audio.EFFECT_SWOOSH.play();
 		  
@@ -765,6 +769,8 @@ var GeocodersApp = GA = {
       setTimeout("GA.Earth.isAnimating = false;", GA.Gestures.MS_TO_ENFORCE_BETWEEN_GESTURES);
     },
     showNextStep: function() {
+      GA.Earth.isPreviewing = true;
+      
       // Play a sound effect.
 		  GA.Audio.EFFECT_SWOOSH.play();
 		  
